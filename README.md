@@ -5,13 +5,13 @@ It also aims to resolves many of the common difficulties and caveats of modern e
 
 From previous observations, here is an unexhaustive list of the key concepts that should be obtained by using the rotonde project.
 
-- **The system has to be language-agnostic**. In a typical case, where the core of the architecture is usually a raspberryPi-like computer, there is no "way-to-go" like on iOS or android (which both have a forced unique language), this freedom of choice implies that useful pieces of codes or language bindings that you gather on the WEB can be of any language. The framework should not be tighted to a specific language, and if multiple languages are used, the usability of the framework should still feel native in all languages.
-- **The system should be easily connected**. Building electronics in 2015 usually implies a connection to the WEB, which means that the framework give you the ability to seemlessly and securely add cloud code execution in the loop.
+- **Language-agnostic**. In a typical case, where the core of the architecture is usually a raspberryPi-like computer, there is no "way-to-go" like on iOS or android (which both have a forced unique language), this freedom of choice implies that useful pieces of codes or language bindings that you gather on the WEB can be of any language. The framework should not be tighted to a specific language, and if multiple languages are used, the usability of the framework should still feel native in all languages.
+- **Connected**. Building electronics in 2015 usually implies a connection to the WEB, which means that the framework give you the ability to seemlessly and securely add cloud code execution in the loop.
 - **Modular**. This framework has its origins in agencies, fastness of execution is a key feature of the framework. The framework should encourage a modular architecture, which allows highly efficient reuse of code from one project to another.
 - **Hardware abstraction**. One of the issue that you face when developping on embedded linux environment is the lack of unicity in the low level hardware access. For example, GPIO are not accessed the same way on a raspberryPI and an edison. The framework should greatly simplify the transfer of code from one architecture to another, without having to refactor existing code.
 - **UI friendly**. The whole system should be easily connected to a screen or any HID device, even a smartphone through wireless means, or both. any combination of WEB/touch screen/external device should be greatly simplified and interchangeable.
 - **Remotely debuggable**. Building custom devices implies remote support and debugging. The framework should provide an environment that is easily debuggable, even from a remote access. All modules should be individually observable, and interaction from a remote point is the key to cheap and responsive support.
-- **Cluster creation**. Inter connectivity of devices is a known complexe situation. This should be easily challenged by providing a clean way of creating meshes of devices.
+- **Cluster creation**. Inter connectivity of devices is a known complexe situation. This should be easily challenged by providing a clean way of creating meshes of devices. TODO check MQTT for amazon for IoT plateform
 
 # Setup 
 
@@ -30,28 +30,28 @@ can be set with
 ```bash
 export GOPATH=$HOME/go
 mkdir $GOPATH
-go get github.com/HackerLoop/postman && go get github.com/tools/godep
-cd $GOPATH/src/github.com/HackerLoop/postman
+go get github.com/HackerLoop/rotonde && go get github.com/tools/godep
+cd $GOPATH/src/github.com/HackerLoop/rotonde
 godep restore
 go build
 ```
 
-`go build` will compile an executable called `postman` in the project
-folder (`$GOPATH/src/HackerLoop/postman`).
+`go build` will compile an executable called `rotonde` in the project
+folder (`$GOPATH/src/HackerLoop/rotonde`).
 
 If something goes wrong during compilation, please [open up an
-issue](https://github.com/HackerLoop/postman/issues) with your
+issue](https://github.com/HackerLoop/rotonde/issues) with your
 os/distribution infos and compilation output. 
 
 ## Running
 
 ```bash
-./postman -port 4242
+./rotonde -port 4242
 ```
 
 ## JSON protocol
 
-In most case, postman is used through its websocket (Rest interface is foreseen), by sending and receiving JSON objects.
+In most case, rotonde is used through its websocket (Rest interface is foreseen), by sending and receiving JSON objects.
 There a five types of json objects, "update", "req", "cmd", "sub" or "unsub",
 which are detailed below.
 
@@ -83,7 +83,7 @@ But "update" objects can also be used to set setting values for the desired modu
   "type": "update",
   "payload": {
     // objectId and instanceId are both required
-    "objectId": 1234, // displayed on start of postman
+    "objectId": 1234, // displayed on start of rotonde
     "instanceId": 0, // see UAVTalk documentation for info
     "data": {
       // Object data, as described by the definitions
@@ -100,7 +100,7 @@ Some Objects are sent periodically, like the AttitudeActual that is sent every 1
 {
   "type": "req",
   "payload": {
-    "objectId": 1234, // displayed on start of postman, will be received from the def packet
+    "objectId": 1234, // displayed on start of rotonde, will be received from the def packet
     "instanceId": 0, // see UAVTalk documentation for info
   }
 }
@@ -108,13 +108,13 @@ Some Objects are sent periodically, like the AttitudeActual that is sent every 1
 
 ### Sub / Unsub
 
-When you connect to postman nothing will be received except definitions, you have to subscribe to a given objectId in order to start receiving its updates.
+When you connect to rotonde nothing will be received except definitions, you have to subscribe to a given objectId in order to start receiving its updates.
 
 ```
 {
   "type": "sub",
   "payload": {
-    "objectId": 1234 // displayed on start of postman, will be received from the def packet
+    "objectId": 1234 // displayed on start of rotonde, will be received from the def packet
   }
 }
 ```
@@ -125,18 +125,18 @@ and you can unsubscribe from this objectId with:
 {
   "type": "unsub",
   "payload": {
-    "objectId": 1234 // displayed on start of postman, will be received from the def packet
+    "objectId": 1234 // displayed on start of rotonde, will be received from the def packet
   }
 }
 ```
 
 ### Def
 
-Each Object has a set of fields and meta datas, when a Object is available (like GPS), the module providing this feature sends its definition to postman which then dispatches a definition to the clients.
+Each Object has a set of fields and meta datas, when a Object is available (like GPS), the module providing this feature sends its definition to rotonde which then dispatches a definition to the clients.
 Given that a Object reflects an available feature of the drone, definitions give clients a clear overview of the available features.
-A client can send definitions to postman, exposing the feature that it provides.
+A client can send definitions to rotonde, exposing the feature that it provides.
 
-When you connect to postman, it will start be sending you all the currently available definitions, new definitions can still become available at any time.
+When you connect to rotonde, it will start be sending you all the currently available definitions, new definitions can still become available at any time.
 
 ```
 {
@@ -149,4 +149,4 @@ When you connect to postman, it will start be sending you all the currently avai
 
 #Licence
 
-[Apache licence 2.0 ](https://github.com/HackerLoop/postman/blob/master/licence.md)
+[Apache licence 2.0 ](https://github.com/HackerLoop/rotonde/blob/master/licence.md)

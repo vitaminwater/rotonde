@@ -3,7 +3,7 @@ package dispatcher
 import (
 	"reflect"
 
-	"github.com/HackerLoop/postman/common"
+	"github.com/HackerLoop/rotonde/common"
 	log "github.com/Sirupsen/logrus"
 )
 

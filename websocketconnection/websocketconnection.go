@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/HackerLoop/postman/common"
-	"github.com/HackerLoop/postman/dispatcher"
+	"github.com/HackerLoop/rotonde/common"
+	"github.com/HackerLoop/rotonde/dispatcher"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"

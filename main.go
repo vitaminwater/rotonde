@@ -4,8 +4,8 @@ import (
 	"flag"
 	"runtime"
 
-	"github.com/HackerLoop/postman/dispatcher"
-	"github.com/HackerLoop/postman/websocketconnection"
+	"github.com/HackerLoop/rotonde/dispatcher"
+	"github.com/HackerLoop/rotonde/websocketconnection"
 )
 
 func main() {
