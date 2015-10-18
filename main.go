@@ -3,9 +3,6 @@ package main
 import (
 	"flag"
 	"runtime"
-
-	"github.com/HackerLoop/rotonde/dispatcher"
-	"github.com/HackerLoop/rotonde/websocketconnection"
 )
 
 func main() {
@@ -14,9 +11,9 @@ func main() {
 	port := flag.Int("port", 4224, "port the websocket will listen on")
 	flag.Parse()
 
-	d := dispatcher.NewDispatcher()
+	d := NewDispatcher()
 
-	go websocketconnection.Start(d, *port)
+	go Start(d, *port)
 
 	go d.Start()
 

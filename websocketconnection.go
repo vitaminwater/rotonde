@@ -1,4 +1,4 @@
-package websocketconnection
+package main
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/HackerLoop/rotonde/common"
-	"github.com/HackerLoop/rotonde/dispatcher"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
@@ -22,7 +20,7 @@ type Packet struct {
 }
 
 // Start the websocket server, each peer connecting to this websocket will be added as a connection to the dispatcher
-func Start(d *dispatcher.Dispatcher, port int) {
+func Start(d *Dispatcher, port int) {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  2048,
 		WriteBufferSize: 2048,
@@ -48,8 +46,8 @@ func Start(d *dispatcher.Dispatcher, port int) {
 	select {}
 }
 
-func startConnection(conn *websocket.Conn, d *dispatcher.Dispatcher) {
-	c := dispatcher.NewConnection()
+func startConnection(conn *websocket.Conn, d *Dispatcher) {
+	c := NewConnection()
 	d.AddConnection(c)
 	defer c.Close()
 
@@ -64,11 +62,11 @@ func startConnection(conn *websocket.Conn, d *dispatcher.Dispatcher) {
 
 		for dispatcherPacket := range c.InChan {
 			switch data := dispatcherPacket.(type) {
-			case dispatcher.Update:
-				packet = Packet{Type: "update", Payload: data}
-			case dispatcher.Request:
-				packet = Packet{Type: "req", Payload: data}
-			case common.Definition:
+			case Event:
+				packet = Packet{Type: "event", Payload: data}
+			case Action:
+				packet = Packet{Type: "action", Payload: data}
+			case Definition:
 				packet = Packet{Type: "def", Payload: data}
 			default:
 				log.Info("Oops unknown packet: ", packet)
@@ -107,24 +105,24 @@ func startConnection(conn *websocket.Conn, d *dispatcher.Dispatcher) {
 				}
 
 				switch packet.Type {
-				case "update":
-					update := dispatcher.Update{}
-					mapstructure.Decode(packet.Payload, &update)
-					dispatcherPacket = update
-				case "req":
-					request := dispatcher.Request{}
-					mapstructure.Decode(packet.Payload, &request)
-					dispatcherPacket = request
+				case "event":
+					event := Event{}
+					mapstructure.Decode(packet.Payload, &event)
+					dispatcherPacket = event
+				case "action":
+					action := Action{}
+					mapstructure.Decode(packet.Payload, &action)
+					dispatcherPacket = action
 				case "sub":
-					subscription := dispatcher.Subscription{}
+					subscription := Subscription{}
 					mapstructure.Decode(packet.Payload, &subscription)
 					dispatcherPacket = subscription
 				case "unsub":
-					unsubscription := dispatcher.Unsubscription{}
+					unsubscription := Unsubscription{}
 					mapstructure.Decode(packet.Payload, &unsubscription)
 					dispatcherPacket = unsubscription
 				case "def":
-					definition := common.Definition{}
+					definition := Definition{}
 					mapstructure.Decode(packet.Payload, &definition)
 					dispatcherPacket = definition
 				}

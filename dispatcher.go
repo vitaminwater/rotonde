@@ -1,52 +1,90 @@
-package dispatcher
+package main
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
 
-	"github.com/HackerLoop/rotonde/common"
 	log "github.com/Sirupsen/logrus"
 )
 
 // ChanQueueLength buffered channel length
 const ChanQueueLength = 10
 
-// Object native representation of a UAVPacket, just a map
+// Definitions is a slice of Definition, adds findBy
+type Definitions []*Definition
+
+// GetDefinitionForIdentifier _
+func (definitions Definitions) GetDefinitionForIdentifier(identifier string) (*Definition, error) {
+	for _, definition := range definitions {
+		if definition.Identifier == identifier {
+			return definition, nil
+		}
+	}
+	return nil, errors.New(fmt.Sprint(identifier, " Not found"))
+}
+
+// FieldsSlice sortable slice of fields
+type FieldsSlice []*FieldDefinition
+
+// FieldDefinition _
+type FieldDefinition struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"` // string, number or boolean
+	Units string `json:"units"`
+}
+
+// Definition, used to expose an action or event
+type Definition struct {
+	Identifier string `json:"identifier" mapstructure:"id"`
+	Type       string `json:"type" mapstructure:"type"` // action or event
+
+	Fields FieldsSlice `json:"fields"`
+}
+
+// Object native representation of an event or action, just a map
 type Object map[string]interface{}
 
-// Update is the UAVTalk protocol packet, encapsulates a common in the field Data
-type Update struct {
-	ObjectID   uint32 `json:"objectId"`
-	InstanceID uint16 `json:"instanceId"`
+type Event struct {
+	Identifier string `json:"identifier"`
 	Data       Object `json:"data"`
 }
 
-// Request is the packet that requests a common data, is forwarded to the owner of a definition (the one that sent the definition)
-type Request struct {
-	ObjectID   uint32 `json:"objectId"`
-	InstanceID uint16 `json:"instanceId"`
+type Action struct {
+	Identifier string `json:"identifier"`
+	Data       Object `json:"data"`
 }
 
 // Subscription adds an objectID to the subscriptions of the sending connection
 type Subscription struct {
-	ObjectID uint32 `json:"objectId"`
+	Identifier string `json:"identifier"`
 }
 
 // Unsubscription removes an objectID from the subscriptions of the sending connection
 type Unsubscription struct {
-	ObjectID uint32 `json:"objectId"`
+	Identifier string `json:"identifier"`
 }
 
 // Connection : basic interface representing a connection to the dispatcher
 type Connection struct {
-	definitions   common.Definitions
-	subscriptions []uint32
-	InChan        chan interface{}
-	OutChan       chan interface{}
+	actions Definitions // actions that this connection can receive
+	events  Definitions // events that this connection can send
+
+	subscriptions []string
+
+	InChan  chan interface{}
+	OutChan chan interface{}
 }
 
 // NewConnection creates a new dispatcher connection
 func NewConnection() *Connection {
 	connection := new(Connection)
+
+	connection.actions = make([]*Definition, 10)
+	connection.events = make([]*Definition, 10)
+
+	connection.subscriptions = make([]string, 10)
+
 	connection.InChan = make(chan interface{}, ChanQueueLength)
 	connection.OutChan = make(chan interface{}, ChanQueueLength)
 
@@ -58,13 +96,13 @@ func (connection *Connection) Close() {
 	close(connection.OutChan)
 }
 
-func (connection *Connection) addSubscription(objectID uint32) {
-	connection.subscriptions = append(connection.subscriptions, objectID)
+func (connection *Connection) addSubscription(identifier string) {
+	connection.subscriptions = append(connection.subscriptions, identifier)
 }
 
-func (connection *Connection) removeSubscription(objectID uint32) {
+func (connection *Connection) removeSubscription(identifier string) {
 	for i, subscription := range connection.subscriptions {
-		if subscription == objectID {
+		if subscription == identifier {
 			if i < len(connection.subscriptions)-1 {
 				copy(connection.subscriptions[i:], connection.subscriptions[i+1:])
 			}
@@ -101,7 +139,10 @@ func (dispatcher *Dispatcher) AddConnection(connection *Connection) {
 
 func (dispatcher *Dispatcher) addConnection(connection *Connection) {
 	for _, c := range dispatcher.connections {
-		for _, d := range c.definitions {
+		for _, d := range c.actions {
+			connection.InChan <- *d
+		}
+		for _, d := range c.events {
 			connection.InChan <- *d
 		}
 	}
@@ -122,48 +163,40 @@ func (dispatcher *Dispatcher) removeConnectionAt(index int) {
 	dispatcher.cases = dispatcher.cases[:len(dispatcher.cases)-1]
 }
 
-func (dispatcher *Dispatcher) dispatchUpdate(from int, update *Update) {
-	fromConnection := dispatcher.connections[from]
-	fromOwner := false
-	if _, err := fromConnection.definitions.GetDefinitionForObjectID(update.ObjectID); err == nil {
-		fromOwner = true
-	}
+func (dispatcher *Dispatcher) dispatchEvent(from int, event *Event) {
 mainLoop:
 	for i, connection := range dispatcher.connections {
 		if i == from {
 			continue
 		}
 
-		if fromOwner == true {
-			for _, objectID := range connection.subscriptions {
-				if objectID == update.ObjectID {
-					connection.InChan <- *update
-					continue mainLoop
-				}
-			}
-		} else {
-			if _, err := connection.definitions.GetDefinitionForObjectID(update.ObjectID); err == nil {
-				connection.InChan <- *update
+		for _, identifier := range connection.subscriptions {
+			if identifier == event.Identifier {
+				connection.InChan <- *event
+				continue mainLoop
 			}
 		}
 	}
 }
 
-func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *common.Definition) {
+func (dispatcher *Dispatcher) dispatchAction(from int, action *Action) {
+	for i, connection := range dispatcher.connections {
+		if i == from {
+			continue
+		}
+
+		if _, err := connection.actions.GetDefinitionForIdentifier(action.Identifier); err == nil {
+			connection.InChan <- *action
+		}
+	}
+}
+
+func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *Definition) {
 	for i, connection := range dispatcher.connections {
 		if i == from {
 			continue
 		}
 		connection.InChan <- *definition
-	}
-}
-
-func (dispatcher *Dispatcher) dispatchRequest(request *Request) {
-	for _, connection := range dispatcher.connections {
-		if _, err := connection.definitions.GetDefinitionForObjectID(request.ObjectID); err == nil {
-			connection.InChan <- *request
-			return
-		}
 	}
 }
 
@@ -174,24 +207,28 @@ func (dispatcher *Dispatcher) processChannels() {
 		dispatcher.removeConnectionAt(chosen - 1)
 	} else {
 		switch data := value.Interface().(type) {
-		case Update:
-			dispatcher.dispatchUpdate(chosen-1, &data)
+		case Event:
+			dispatcher.dispatchEvent(chosen-1, &data)
+		case Action:
+			dispatcher.dispatchAction(chosen-1, &data)
 		case Subscription:
 			log.Info("Executing subscribe")
 			connection := dispatcher.connections[chosen-1]
-			connection.addSubscription(data.ObjectID)
+			connection.addSubscription(data.Identifier)
 		case Unsubscription:
 			log.Info("Executing unsubscribe")
 			connection := dispatcher.connections[chosen-1]
-			connection.removeSubscription(data.ObjectID)
-		case common.Definition:
+			connection.removeSubscription(data.Identifier)
+		case Definition:
 			log.Info("Dispatching Definition message")
 			connection := dispatcher.connections[chosen-1]
-			connection.definitions = append(connection.definitions, &data)
+			if data.Type == "action" {
+				connection.actions = append(connection.actions, &data)
+			} else if data.Type == "event" {
+				connection.events = append(connection.events, &data)
+			}
+
 			dispatcher.dispatchDefinition(chosen-1, &data)
-		case Request:
-			log.Info("Dispatching Request message")
-			dispatcher.dispatchRequest(&data)
 		case *Connection:
 			log.Info("Add connection")
 			dispatcher.addConnection(data) // data is already a pointer
