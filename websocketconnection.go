@@ -11,9 +11,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// Packet is the JSON representation of an UAVTalk package, the Data field contains the common JSON representation.
-// More infos at https://wiki.openpilot.org/display/WIKI/UAVTalk
-// Warning: the link above might not be totally true in Taulabs, better read the code than the doc.
 type Packet struct {
 	Type    string      `json:"type"`
 	Payload interface{} `json:"payload"`
@@ -29,7 +26,7 @@ func Start(d *Dispatcher, port int) {
 		},
 	}
 
-	http.HandleFunc("/uav", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("Connection received")
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
