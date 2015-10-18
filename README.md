@@ -70,7 +70,7 @@ Each module is connected to `rotonde`, and communicate with each other
 though `rotonde`.
 
 Lets say you want to control various servo motors, through the
-(pca9685)[http://www.adafruit.com/product/815], the first thing you do
+[pca9685](http://www.adafruit.com/product/815), the first thing you do
 is look for an implementation for this device for your language; of
 course you find an abstraction, but for another language, so now you
 are given 2 choices, either you switch all your current dev to this language,
@@ -82,7 +82,7 @@ library in your particular language, what you'd be looking for is a
 `rotonde` module for your device, or make your own.
 
 
-So going on with the pca9685 device, we are going to design a typical
+So going on with the `pca9685` device, we are going to design a typical
 module to work with it, universally.
 Let's start by searching an implementation on github, a quick googling
 gets us to this repo [https://github.com/101100/pca9685](https://github.com/101100/pca9685),
@@ -139,7 +139,7 @@ in our case, we would end up with a definition looking like:
 ```
 
 when you receive this packet when connecting to `rotonde`, you know that
-the pca9685 is available on the system, and you can now send actions to
+the `pca9685` is available on the system, and you can now send actions to
 control it, so lets say we want to put the servo on channel 0 to its center position,
 we would send an action as follows:
 
@@ -154,7 +154,7 @@ we would send an action as follows:
 }
 ```
 
-When the pca9685 module receives this action, it calls setPulseRange(0, 0, 127),
+When the `pca9685` module receives this action, it calls setPulseRange(0, 0, 127),
 and makes the servo move to its center position.
 
 Now the thing that needs to be well understood, is that now that this
