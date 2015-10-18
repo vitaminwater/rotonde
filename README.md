@@ -101,7 +101,7 @@ setPulseRange(channel, onStep, offStep)
 
 If you recall the section above, you know that this is just an action,
 which we will name `SET_PULSE_RANGE`, this action has a payload made of
-the three parameters, channel, onStep, and offStep.
+the three parameters, `channel`, `onStep`, and `offStep`.
 
 Upon connection to `rotonde`, the first that our module is going to do is
 to tell the other modules about the availability of the `SET_PULSE_RANGE`
