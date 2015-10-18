@@ -33,7 +33,7 @@ made of 4 elements, in a typical web or mobile applications, these 4
 elements are UI, actions, events and stores.
 
 A classical scenario is when a user presses a button, when this happens,
-the UI created an action, says 'CLICKED_BUTTON', the concerned stores
+the UI created an action, says `CLICKED_BUTTON`, the concerned stores
 process the action by modifying there data, and if data has changed, the
 store sends an event to notify the view, which can then display the
 change made to the store.
@@ -50,10 +50,10 @@ screen.
 
 The stores are the different components of your platform, lets say you
 are on a raspberry PI, and you want to control a stepper motor, you'd
-send an action "SPIN_MOTOR" with something like "speed" and "duration"
+send an action `SPIN_MOTOR` with something like "speed" and "duration"
 as payload, the store responsible for controlling the motors receives it
 and starts the motor at the given speed for the given duration, when the
-duration is reached, it sends an event "MOTOR_STOPPED" to tell the rest
+duration is reached, it sends an event `MOTOR_STOPPED` to tell the rest
 of the system that everything went fine.
 
 # How it works
