@@ -22,18 +22,22 @@ programming has been mostly dominated by the MVC (and its cousins) pattern.
 I bet you know MVC, which was the perfect fit for the web development,
 where applications where totally constructed around the concept of
 request-response.
+
 What Flux did was to respond to the fact that modern web applications,
 and applications in general don't really fit with the request-response
 pattern. Flux proposed a architecture that relies on the fact that data
 has a unique flowing direction.
+
 In Flux, everything is well separated, and the whole picture is only
 made of 4 elements, in a typical web or mobile applications, these 4
 elements are UI, actions, events and stores.
+
 A classical scenario is when a user presses a button, when this happens,
 the UI created an action, says 'CLICKED_BUTTON', the concerned stores
 process the action by modifying there data, and if data has changed, the
 store sends an event to notify the view, which can then display the
 change made to the store.
+
 And now the loop is complete, data flows in a unique direction: UI => action => store => event => UI.
 For more infos on flux: see the documentation by facebook: [Here](https://facebook.github.io/flux/).
 
@@ -43,6 +47,7 @@ embedded development, the analogy is made by the fact that you could
 totally replace the UI by any kind of input that you have when you code
 on an embedded plateform, whether it's a physical hardware button or an actual UI on a touch
 screen.
+
 The stores are the different components of your platform, lets say you
 are on a raspberry PI, and you want to control a stepper motor, you'd
 send an action "SPIN_MOTOR" with something like "speed" and "duration"
@@ -55,6 +60,7 @@ of the system that everything went fine.
 
 So what rotonde gives you is a kind of a dispatcher/router
 for events and actions.
+
 The current implemented interface to this dispatcher is a websocket, but
 any kind of transport layer could be implemented (let me know if you
 need something in particular though an issue).
@@ -67,12 +73,14 @@ Lets say you want to control various servo motors, through the
 (pca9685)[http://www.adafruit.com/product/815], the first thing you do
 is look for an implementation for this device for your language; of
 course you find an abstraction, but for another language, so now you
-are given 2 choices, you switch all your current dev to this language,
-or you port the library into your favorite language; which is a really
-classical situation, especially when coding on a raspberryPI.
+are given 2 choices, either you switch all your current dev to this language,
+or you port the library into your favorite language;
+which is a really classical situation, especially when coding on a raspberryPI.
+
 With rotonde it would be really different, instead of looking for a
 library in your particular language, what you'd be looking for is a
 rotonde module for your device, or make your own.
+
 
 So going on with the pca9685 device, we are going to design a typical
 module to work with it, universally.
@@ -94,11 +102,13 @@ setPulseRange(channel, onStep, offStep)
 If you recall the section above, you know that this is just an action,
 which we will name SET_PULSE_RANGE, this action has a payload made of
 the three parameters, channel, onStep, and offStep.
+
 Upon connection to rotonde, the first that our module is going to do is
 to tell the other modules about the availability of the SET_PULSE_RANGE
 action, it does so by sending a definition. A definition is a packet
 that describes an action of event available on rotonde, it typically has
 a name, and a list of payload fields.
+
 When a definition is sent to rotonde, rotonde dispatches it to all other
 modules, so they know what actions are available on the system. New
 modules connecting to rotonde start by receiving all available actions.
