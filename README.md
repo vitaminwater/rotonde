@@ -93,7 +93,7 @@ The idea of our module is to expose this library's API methods to other
 modules connected to `rotonde`, which is a usual strategy when porting
 libraries to `rotonde`.
 For our example we are going to expose the
-setPulseRange API call, its prototype is simple:
+`setPulseRange` API call, its prototype is simple:
 
 ```
 setPulseRange(channel, onStep, offStep)
@@ -154,7 +154,7 @@ we would send an action as follows:
 }
 ```
 
-When the `pca9685` module receives this action, it calls setPulseRange(0, 0, 127),
+When the `pca9685` module receives this action, it calls `setPulseRange(0, 0, 127)`,
 and makes the servo move to its center position.
 
 Now the thing that needs to be well understood, is that now that this
