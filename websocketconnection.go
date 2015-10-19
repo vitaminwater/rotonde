@@ -139,5 +139,4 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 
 	log.Println("Treating messages")
 	wg.Wait()
-	log.Println("###########")
 }
