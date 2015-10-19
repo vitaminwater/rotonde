@@ -36,8 +36,8 @@ type FieldDefinition struct {
 
 // Definition, used to expose an action or event
 type Definition struct {
-	Identifier string `json:"identifier" mapstructure:"id"`
-	Type       string `json:"type" mapstructure:"type"` // action or event
+	Identifier string `json:"identifier"`
+	Type       string `json:"type"` // action or event
 
 	Fields FieldsSlice `json:"fields"`
 }
@@ -135,11 +135,11 @@ func (dispatcher *Dispatcher) AddConnection(connection *Connection) {
 
 func (dispatcher *Dispatcher) addConnection(connection *Connection) {
 	for _, c := range dispatcher.connections {
-		for _, a := range c.actions {
-			connection.InChan <- *a
-		}
 		for _, e := range c.events {
 			connection.InChan <- *e
+		}
+		for _, a := range c.actions {
+			connection.InChan <- *a
 		}
 	}
 
@@ -204,8 +204,10 @@ func (dispatcher *Dispatcher) processChannels() {
 	} else {
 		switch data := value.Interface().(type) {
 		case Event:
+			log.Info("Dispatching event")
 			dispatcher.dispatchEvent(chosen-1, &data)
 		case Action:
+			log.Info("Dispatching action")
 			dispatcher.dispatchAction(chosen-1, &data)
 		case Subscription:
 			log.Info("Executing subscribe")
