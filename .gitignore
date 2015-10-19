@@ -1,3 +1,4 @@
 .*.sw*
 rotonde
 tmp*
+*/**/node_modules
