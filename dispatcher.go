@@ -80,11 +80,6 @@ type Connection struct {
 func NewConnection() *Connection {
 	connection := new(Connection)
 
-	connection.actions = make([]*Definition, 10)
-	connection.events = make([]*Definition, 10)
-
-	connection.subscriptions = make([]string, 10)
-
 	connection.InChan = make(chan interface{}, ChanQueueLength)
 	connection.OutChan = make(chan interface{}, ChanQueueLength)
 
@@ -94,6 +89,7 @@ func NewConnection() *Connection {
 // Close closes the connection, possible issues...
 func (connection *Connection) Close() {
 	close(connection.OutChan)
+	close(connection.InChan)
 }
 
 func (connection *Connection) addSubscription(identifier string) {
@@ -139,11 +135,11 @@ func (dispatcher *Dispatcher) AddConnection(connection *Connection) {
 
 func (dispatcher *Dispatcher) addConnection(connection *Connection) {
 	for _, c := range dispatcher.connections {
-		for _, d := range c.actions {
-			connection.InChan <- *d
+		for _, a := range c.actions {
+			connection.InChan <- *a
 		}
-		for _, d := range c.events {
-			connection.InChan <- *d
+		for _, e := range c.events {
+			connection.InChan <- *e
 		}
 	}
 

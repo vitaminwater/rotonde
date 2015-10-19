@@ -48,6 +48,7 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 	d.AddConnection(c)
 	defer c.Close()
 
+	errChan := make(chan error)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -57,25 +58,31 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 		var err error
 		var packet Packet
 
-		for dispatcherPacket := range c.InChan {
-			switch data := dispatcherPacket.(type) {
-			case Event:
-				packet = Packet{Type: "event", Payload: data}
-			case Action:
-				packet = Packet{Type: "action", Payload: data}
-			case Definition:
-				packet = Packet{Type: "def", Payload: data}
-			default:
-				log.Info("Oops unknown packet: ", packet)
-			}
+		for {
+			select {
+			case dispatcherPacket := <-c.InChan:
+				switch data := dispatcherPacket.(type) {
+				case Event:
+					packet = Packet{Type: "event", Payload: data}
+				case Action:
+					packet = Packet{Type: "action", Payload: data}
+				case Definition:
+					packet = Packet{Type: "def", Payload: data}
+				default:
+					log.Info("Oops unknown packet: ", packet)
+				}
 
-			jsonPacket, err = json.Marshal(packet)
-			if err != nil {
-				log.Warning(err)
-			}
+				jsonPacket, err = json.Marshal(packet)
+				if err != nil {
+					log.Warning(err)
+				}
 
-			if err := conn.WriteMessage(websocket.TextMessage, jsonPacket); err != nil {
-				log.Warning(err)
+				if err := conn.WriteMessage(websocket.TextMessage, jsonPacket); err != nil {
+					log.Warning(err)
+					return
+				}
+
+			case <-errChan:
 				return
 			}
 		}
@@ -91,6 +98,7 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 			messageType, reader, err := conn.NextReader()
 			if err != nil {
 				log.Println(err)
+				errChan <- err
 				return
 			}
 			if messageType == websocket.TextMessage {
@@ -131,4 +139,5 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 
 	log.Println("Treating messages")
 	wg.Wait()
+	log.Println("###########")
 }
