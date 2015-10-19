@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/HackerLoop/rotonde/shared"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
@@ -62,11 +63,11 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 			select {
 			case dispatcherPacket := <-c.InChan:
 				switch data := dispatcherPacket.(type) {
-				case Event:
+				case rotonde.Event:
 					packet = Packet{Type: "event", Payload: data}
-				case Action:
+				case rotonde.Action:
 					packet = Packet{Type: "action", Payload: data}
-				case Definition:
+				case rotonde.Definition:
 					packet = Packet{Type: "def", Payload: data}
 				default:
 					log.Info("Oops unknown packet: ", packet)
@@ -111,23 +112,23 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 
 				switch packet.Type {
 				case "event":
-					event := Event{}
+					event := rotonde.Event{}
 					mapstructure.Decode(packet.Payload, &event)
 					dispatcherPacket = event
 				case "action":
-					action := Action{}
+					action := rotonde.Action{}
 					mapstructure.Decode(packet.Payload, &action)
 					dispatcherPacket = action
 				case "sub":
-					subscription := Subscription{}
+					subscription := rotonde.Subscription{}
 					mapstructure.Decode(packet.Payload, &subscription)
 					dispatcherPacket = subscription
 				case "unsub":
-					unsubscription := Unsubscription{}
+					unsubscription := rotonde.Unsubscription{}
 					mapstructure.Decode(packet.Payload, &unsubscription)
 					dispatcherPacket = unsubscription
 				case "def":
-					definition := Definition{}
+					definition := rotonde.Definition{}
 					mapstructure.Decode(packet.Payload, &definition)
 					dispatcherPacket = definition
 				}

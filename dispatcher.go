@@ -1,74 +1,19 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
 
+	"github.com/HackerLoop/rotonde/shared"
 	log "github.com/Sirupsen/logrus"
 )
 
 // ChanQueueLength buffered channel length
 const ChanQueueLength = 10
 
-// Definitions is a slice of Definition, adds findBy
-type Definitions []*Definition
-
-// GetDefinitionForIdentifier _
-func (definitions Definitions) GetDefinitionForIdentifier(identifier string) (*Definition, error) {
-	for _, definition := range definitions {
-		if definition.Identifier == identifier {
-			return definition, nil
-		}
-	}
-	return nil, errors.New(fmt.Sprint(identifier, " Not found"))
-}
-
-// FieldsSlice sortable slice of fields
-type FieldsSlice []*FieldDefinition
-
-// FieldDefinition _
-type FieldDefinition struct {
-	Name  string `json:"name"`
-	Type  string `json:"type"` // string, number or boolean
-	Units string `json:"units"`
-}
-
-// Definition, used to expose an action or event
-type Definition struct {
-	Identifier string `json:"identifier"`
-	Type       string `json:"type"` // action or event
-
-	Fields FieldsSlice `json:"fields"`
-}
-
-// Object native representation of an event or action, just a map
-type Object map[string]interface{}
-
-type Event struct {
-	Identifier string `json:"identifier"`
-	Data       Object `json:"data"`
-}
-
-type Action struct {
-	Identifier string `json:"identifier"`
-	Data       Object `json:"data"`
-}
-
-// Subscription adds an objectID to the subscriptions of the sending connection
-type Subscription struct {
-	Identifier string `json:"identifier"`
-}
-
-// Unsubscription removes an objectID from the subscriptions of the sending connection
-type Unsubscription struct {
-	Identifier string `json:"identifier"`
-}
-
 // Connection : basic interface representing a connection to the dispatcher
 type Connection struct {
-	actions Definitions // actions that this connection can receive
-	events  Definitions // events that this connection can send
+	actions rotonde.Definitions // actions that this connection can receive
+	events  rotonde.Definitions // events that this connection can send
 
 	subscriptions []string
 
@@ -159,7 +104,7 @@ func (dispatcher *Dispatcher) removeConnectionAt(index int) {
 	dispatcher.cases = dispatcher.cases[:len(dispatcher.cases)-1]
 }
 
-func (dispatcher *Dispatcher) dispatchEvent(from int, event *Event) {
+func (dispatcher *Dispatcher) dispatchEvent(from int, event *rotonde.Event) {
 mainLoop:
 	for i, connection := range dispatcher.connections {
 		if i == from {
@@ -175,7 +120,7 @@ mainLoop:
 	}
 }
 
-func (dispatcher *Dispatcher) dispatchAction(from int, action *Action) {
+func (dispatcher *Dispatcher) dispatchAction(from int, action *rotonde.Action) {
 	for i, connection := range dispatcher.connections {
 		if i == from {
 			continue
@@ -187,7 +132,7 @@ func (dispatcher *Dispatcher) dispatchAction(from int, action *Action) {
 	}
 }
 
-func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *Definition) {
+func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *rotonde.Definition) {
 	for i, connection := range dispatcher.connections {
 		if i == from {
 			continue
@@ -203,21 +148,21 @@ func (dispatcher *Dispatcher) processChannels() {
 		dispatcher.removeConnectionAt(chosen - 1)
 	} else {
 		switch data := value.Interface().(type) {
-		case Event:
+		case rotonde.Event:
 			log.Info("Dispatching event")
 			dispatcher.dispatchEvent(chosen-1, &data)
-		case Action:
+		case rotonde.Action:
 			log.Info("Dispatching action")
 			dispatcher.dispatchAction(chosen-1, &data)
-		case Subscription:
+		case rotonde.Subscription:
 			log.Info("Executing subscribe")
 			connection := dispatcher.connections[chosen-1]
 			connection.addSubscription(data.Identifier)
-		case Unsubscription:
+		case rotonde.Unsubscription:
 			log.Info("Executing unsubscribe")
 			connection := dispatcher.connections[chosen-1]
 			connection.removeSubscription(data.Identifier)
-		case Definition:
+		case rotonde.Definition:
 			log.Info("Dispatching Definition message")
 			connection := dispatcher.connections[chosen-1]
 			if data.Type == "action" {
