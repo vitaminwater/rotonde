@@ -214,16 +214,17 @@ os/distribution infos and compilation output.
 ## Running
 
 ```bash
-./rotonde -port 4242
+./rotonde
 ```
+
+Rotonde will start serving on port 4224 by default, add option `-port`
+to specify another one.
 
 ## JSON protocol
 
 In most case, rotonde is used through its websocket (other interfaces are foreseen), by sending and receiving JSON objects.
-There a five types of json objects, `event`, `action`, `def`, `sub` or `unsub`,
-which are detailed below.
 
-These json objects all share a common structure :
+All objects received or sent from/to rotonde have this structure:
 
 ```
 {
@@ -234,49 +235,146 @@ These json objects all share a common structure :
 }
 ```
 
-### Event
+There a five possible values for the `type` field, `event`, `action`, `def`, `sub` or `unsub`,
+the content of the `payload` field varies based on the type.
 
+The different possible structures of the payload are described below.
+
+### Def
+
+When a module connects to rotonde, it has to detail its API to rotonde
+(and other modules). It does so by sending `definition` objects.
+Knowing that everything is either an action or an event in rotonde,
+there are two types of definitions, either `action` or `event`.
+
+
+Each definitions contain a set of fields describing its structure. This
+is mainly to ensure that the action or event is present with a
+predictable structure.
+
+
+In a typical scenario, a module that connects to rotonde starts by
+waiting for all the events and actions it requires to work properly.
+Definitions are a sort of description of what is available on the
+system.
+
+
+This way of doing things gives you the ability to create a modular
+system where some module would only start when a given capability is
+present.
+
+
+```
+{
+  "identifier": "",
+  "type": "",
+  "fields":[
+    {
+      "name": "",
+      "type": "", // optional
+      "unit": "", // optional
+    },
+    {
+      ... other fields ...
+    }
+  ]
+}
+```
 
 
 ### Action
 
+
+In rotonde, everything is either an action or an event, they are the
+only way for the modules to exchange data with the external world.
+
+
+Actions are the APIs of the modules, each action has an identifier; when
+a module declares an action through the mean of a `definition` object,
+it will receive all actions matching this identifier sent to rotonde.
+If multiple modules declare the same action, they will all receive it.
+
+
+Actions are typically sent by user interface modules, for example, when
+a user presses a button, the controller of the button will send an action,
+that will be handled by one or multiple modules.
+For example, if the button is meant to switch a light on, the action
+identifier would be `TURN_LIGHT_ON`, this could totally trigger the
+light control module, but if we want to play a music when this happens,
+just do another module that also exposes the `TURN_LIGHT_ON` action, and
+starts the music when it receives the action.
+
+
+An action generally comes with some data, this data can be of any form,
+its structure should be described by the definitions.
+
+
+An action payload contains the following fields:
+
+```
+{
+  "identifier":"",
+  "data": {
+    ... data fields of the action ...
+  }
+}
+```
+
+Actions can be seen as the input of modules.
+
+
+### Event
+
+
+Modules will often have things to say, whether they want to tell what
+there sensor is sensing, or whether they want to report a status.
+
+
+This is what events are made for. Modules have the ability to send
+events through rotonde, these events will be routed to the concerned
+modules.
+
+
+An event generally comes with some data, this data can be of any form,
+its structure should be described by the definitions.
+
+
+An event payload contains the following fields:
+
+```
+{
+  "identifier":"",
+  "data": {
+    ... data fields of the event ...
+  }
+}
+```
+
+
+Events can be seen as the output of modules.
+
+
 ### Sub / Unsub
 
-When you connect to rotonde nothing will be received except definitions, you have to subscribe to a given objectId in order to start receiving its updates.
+
+When you connect to rotonde nothing will be received except definitions, you have to subscribe to a given event in order to start receiving it.
 
 ```
 {
   "type": "sub",
   "payload": {
-    "objectId": 1234 // displayed on start of rotonde, will be received from the def packet
+    "identifier": ""
   }
 }
 ```
 
-and you can unsubscribe from this objectId with:
+and you can unsubscribe from this identifier with:
 
 ```
 {
   "type": "unsub",
   "payload": {
-    "objectId": 1234 // displayed on start of rotonde, will be received from the def packet
-  }
-}
-```
-
-### Def
-
-Each Object has a set of fields and meta datas, when a Object is available (like GPS), the module providing this feature sends its definition to rotonde which then dispatches a definition to the clients.
-Given that a Object reflects an available feature of the drone, definitions give clients a clear overview of the available features.
-A client can send definitions to rotonde, exposing the feature that it provides.
-
-When you connect to rotonde, it will start be sending you all the currently available definitions, new definitions can still become available at any time.
-
-```
-{
-  "type": "def",
-  "payload": {
-    // meta datas from Object, at first will be tightly linked to definitions found in the xml files
+    "identifier": ""
   }
 }
 ```
