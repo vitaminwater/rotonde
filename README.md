@@ -242,8 +242,12 @@ The different possible structures of the payload are described below.
 
 ### Def
 
-When a module connects to rotonde, it has to detail its API to rotonde
-(and other modules). It does so by sending `definition` objects.
+When a module connects to rotonde, it has to detail its API to rotonde.
+It does so by sending `definition` objects, rotonde routes all received
+definitions to all connected modules. And when you connect to rotonde,
+you receive all the available definitions.
+
+
 Knowing that everything is either an action or an event in rotonde,
 there are two types of definitions, either `action` or `event`.
 
