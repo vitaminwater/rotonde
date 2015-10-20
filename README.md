@@ -383,6 +383,33 @@ and you can unsubscribe from this identifier with:
 }
 ```
 
+# Libraries to port to rotonde
+
+The number of available modules is crucial for rotonde, the good news is
+that it is actually quite easy to take a library and make its API
+available to rotonde modules.
+
+
+Here is a list of libraries that are ported, or will be ported:
+
+- Serial:
+  - [rotonde serial module](https://github.com/HackerLoop/serial-port-json-server) exposes the features of [serial-port-json-server](https://github.com/johnlauer/serial-port-json-server)(SPJS)
+    - serial devices listing
+    - advanced serial communication
+    - flashing of an arduino from an url :) this one is crazy haha.
+    - please see his README first
+- Gobot:
+  - This is a work in progress and a huge gain for rotonde, gobot
+    already has the ability to make programs that expose features
+    through a REST API, and because it is written in Go, it is really
+    easy to just swap REST to websocket.
+
+    The plan here is to generate tons of modules for all of gobot
+    drivers, in all supported plateforms.
+
+    A skeleton project is on its way to ease the work.
+- TODO: expand list
+
 #Licence
 
 [Apache licence 2.0 ](https://github.com/HackerLoop/rotonde/blob/master/licence.md)
