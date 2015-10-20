@@ -12,11 +12,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-type Packet struct {
-	Type    string      `json:"type"`
-	Payload interface{} `json:"payload"`
-}
-
 // Start the websocket server, each peer connecting to this websocket will be added as a connection to the dispatcher
 func Start(d *Dispatcher, port int) {
 	var upgrader = websocket.Upgrader{
@@ -57,18 +52,18 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 
 		var jsonPacket []byte
 		var err error
-		var packet Packet
+		var packet rotonde.Packet
 
 		for {
 			select {
 			case dispatcherPacket := <-c.InChan:
 				switch data := dispatcherPacket.(type) {
 				case rotonde.Event:
-					packet = Packet{Type: "event", Payload: data}
+					packet = rotonde.Packet{Type: "event", Payload: data}
 				case rotonde.Action:
-					packet = Packet{Type: "action", Payload: data}
+					packet = rotonde.Packet{Type: "action", Payload: data}
 				case rotonde.Definition:
-					packet = Packet{Type: "def", Payload: data}
+					packet = rotonde.Packet{Type: "def", Payload: data}
 				default:
 					log.Info("Oops unknown packet: ", packet)
 				}
@@ -103,7 +98,7 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 				return
 			}
 			if messageType == websocket.TextMessage {
-				packet := Packet{}
+				packet := rotonde.Packet{}
 				decoder := json.NewDecoder(reader)
 				if err := decoder.Decode(&packet); err != nil {
 					log.Warning(err)

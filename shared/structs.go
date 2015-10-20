@@ -5,6 +5,12 @@ import (
 	"fmt"
 )
 
+// wrapper for json serialized connections
+type Packet struct {
+	Type    string      `json:"type"`
+	Payload interface{} `json:"payload"`
+}
+
 // Definitions is a slice of Definition, adds findBy
 type Definitions []*Definition
 
@@ -34,6 +40,11 @@ type Definition struct {
 	Type       string `json:"type"` // action or event
 
 	Fields FieldsSlice `json:"fields"`
+}
+
+func (d *Definition) PushField(n, t, u string) {
+	field := FieldDefinition{n, t, u}
+	d.Fields = append(d.Fields, &field)
 }
 
 // Object native representation of an event or action, just a map
