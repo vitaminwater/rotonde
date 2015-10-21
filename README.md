@@ -92,10 +92,12 @@ In `rotonde` each module exposes its API through `events` and `actions`.
 represent two different concepts.
 
 `Events` are a way for modules to send a message to the rest of the
-system.
+system. These `event` can be sent spontaneously, or as a reply to an
+`action`.
 
 `Actions` are a way for modules to expose their features to the rest of
-the system.
+the system. Other module can then use this action to tell the module
+what to do.
 
 Declaring an `event` or `action` to rotonde is achieved by sending a `def`
 packet, please see the [def](https://github.com/HackerLoop/rotonde#def)
