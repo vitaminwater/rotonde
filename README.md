@@ -410,6 +410,12 @@ Here is a list of libraries that are ported, or will be ported:
     A skeleton project is on its way to ease the work.
 - TODO: expand list
 
-#Licence
+# Contributing
+
+Yes please.
+
+![](https://d2v4zi8pl64nxt.cloudfront.net/1362775331_b8c6b6e89781c85fee638dffe341ff64.jpg)
+
+# Licence
 
 [Apache licence 2.0 ](https://github.com/HackerLoop/rotonde/blob/master/licence.md)
