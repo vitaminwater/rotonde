@@ -78,6 +78,9 @@ ws.on('message', (data) => {
     case 'def':
       console.log('received', packet.payload.type, 'definition', packet.payload);
     break;
+    case 'undef':
+      console.log('received', packet.payload.type, 'unDefinition', packet.payload);
+    break;
     case 'event':
       console.log('received event', packet.payload);
     break;

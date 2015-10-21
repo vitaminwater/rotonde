@@ -64,8 +64,10 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 					packet = rotonde.Packet{Type: "action", Payload: data}
 				case rotonde.Definition:
 					packet = rotonde.Packet{Type: "def", Payload: data}
+				case rotonde.UnDefinition:
+					packet = rotonde.Packet{Type: "undef", Payload: data}
 				default:
-					log.Info("Oops unknown packet: ", packet)
+					log.Info("Oops unknown packet: ", dispatcherPacket)
 				}
 
 				jsonPacket, err = json.Marshal(packet)
@@ -126,6 +128,10 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 					definition := rotonde.Definition{}
 					mapstructure.Decode(packet.Payload, &definition)
 					dispatcherPacket = definition
+				case "undef":
+					unDefinition := rotonde.UnDefinition{}
+					mapstructure.Decode(packet.Payload, &unDefinition)
+					dispatcherPacket = unDefinition
 				}
 
 				c.OutChan <- dispatcherPacket

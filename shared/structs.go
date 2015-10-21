@@ -24,8 +24,28 @@ func (definitions Definitions) GetDefinitionForIdentifier(identifier string) (*D
 	return nil, errors.New(fmt.Sprint(identifier, " Not found"))
 }
 
-// FieldsSlice sortable slice of fields
-type FieldsSlice []*FieldDefinition
+func PushDefinition(definitions Definitions, def *Definition) Definitions {
+	if _, err := definitions.GetDefinitionForIdentifier(def.Identifier); err == nil {
+		return definitions
+	}
+	return append(definitions, def)
+}
+
+func RemoveDefinition(definitions Definitions, identifier string) Definitions {
+	for i, definition := range definitions {
+		if definition.Identifier == identifier {
+			if i < len(definitions)-1 {
+				copy(definitions[i:], definitions[i+1:])
+			}
+			definitions = definitions[0 : len(definitions)-1]
+			return definitions
+		}
+	}
+	return definitions
+}
+
+// Fields sortable slice of fields
+type FieldDefinitions []*FieldDefinition
 
 // FieldDefinition _
 type FieldDefinition struct {
@@ -39,13 +59,15 @@ type Definition struct {
 	Identifier string `json:"identifier"`
 	Type       string `json:"type"` // action or event
 
-	Fields FieldsSlice `json:"fields"`
+	Fields FieldDefinitions `json:"fields"`
 }
 
 func (d *Definition) PushField(n, t, u string) {
 	field := FieldDefinition{n, t, u}
 	d.Fields = append(d.Fields, &field)
 }
+
+type UnDefinition Definition
 
 // Object native representation of an event or action, just a map
 type Object map[string]interface{}

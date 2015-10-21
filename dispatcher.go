@@ -31,13 +31,15 @@ func NewConnection() *Connection {
 	return connection
 }
 
-// Close closes the connection, possible issues...
 func (connection *Connection) Close() {
 	close(connection.OutChan)
 	close(connection.InChan)
 }
 
 func (connection *Connection) addSubscription(identifier string) {
+	if connection.isSubscribed(identifier) {
+		return
+	}
 	connection.subscriptions = append(connection.subscriptions, identifier)
 }
 
@@ -53,19 +55,32 @@ func (connection *Connection) removeSubscription(identifier string) {
 	}
 }
 
-// Dispatcher main dispatcher class
+func (connection *Connection) isSubscribed(identifier string) bool {
+	for _, subscription := range connection.subscriptions {
+		if subscription == identifier {
+			return true
+		}
+	}
+	return false
+}
+
 type Dispatcher struct {
+	//definitions		 map[string]int				// this is to keep track of the
+	//available definitions, it maps identifiers to the number of time a
+	//definition has been declared by a module, and dispatched defs and
+	//undefs packets when needed (please see comments above the
+	//dispatchDefinition function).
 	connections    []*Connection
-	cases          []reflect.SelectCase // cases for the select case of the main loop, the first element il for the connectionChan, the others are for the outChans of the connections
+	cases          []reflect.SelectCase // cases for the select case of the main loop, the first element is for the connectionChan, the others are for the outChans of the connections
 	connectionChan chan *Connection     // connectionChan receives the new connections to add
 }
 
-// NewDispatcher creates a dispatcher
 func NewDispatcher() *Dispatcher {
 	dispatcher := new(Dispatcher)
 	dispatcher.connections = make([]*Connection, 0, 100)
 	dispatcher.cases = make([]reflect.SelectCase, 0, 100)
 	dispatcher.connectionChan = make(chan *Connection, 10) // TODO try unbuffered chan
+	//dispatcher.definitions = make(map[string]int)
 
 	// first case is for the connectionChan
 	dispatcher.cases = append(dispatcher.cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(dispatcher.connectionChan)})
@@ -73,7 +88,6 @@ func NewDispatcher() *Dispatcher {
 	return dispatcher
 }
 
-// AddConnection adds a connection to the dispatcher
 func (dispatcher *Dispatcher) AddConnection(connection *Connection) {
 	dispatcher.connectionChan <- connection
 }
@@ -132,7 +146,36 @@ func (dispatcher *Dispatcher) dispatchAction(from int, action *rotonde.Action) {
 	}
 }
 
+// The code commented in the two next functions changes the behaviour
+// of rotonde when facing multiple modules declaring the same
+// definition (eg. with same identidiers). Currently, all def and undef packets are sent, the module
+// has to be able to determine if the action or event it requires is of
+// the right structure.
+// This is actually part of a larger discussion about version management
+// for modules, and identifier collision.
+//
+// The commented code below restricts the dispatch of definition packes
+// to the first added and last removed for a given identifier.
+//
+// A more normal way of doing would to also take into account the
+// fields, and change the rule to: only send def packets when its the
+// first time a definition with this identifier AND fields is declared.
+// This would involve generating a hash to quickly match the fields.
+//
+// This could be the right thing to do, but it needs to be well thought
+// as it could force to do this distinction in other places. In sub
+// packets for example.
+//
+// So the simplest now is to just let the modules check if the
+// definition and actions/events are given with the right structure.
+
 func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *rotonde.Definition) {
+	/*if n, ok := dispatcher.definitions[definition.Identifier]; ok == true && n >= 1 {
+		n++
+		dispatcher.definitions[definition.Identifier] = n
+		return // we only send def packets when it is a new packet (when ok == false or n == 0)
+	}
+	dispatcher.definitions[definition.Identifier] = 1*/
 	for i, connection := range dispatcher.connections {
 		if i == from {
 			continue
@@ -141,37 +184,84 @@ func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *rotonde.D
 	}
 }
 
+func (dispatcher *Dispatcher) dispatchUnDefinition(from int, unDefinition *rotonde.UnDefinition) {
+	/*if n, ok := dispatcher.definitions[unDefinition.Identifier]; ok == false {
+		log.Warning("calling dispatchUnDefinition with a definition that has never been registered")
+		return
+	} else {
+		n--
+		dispatcher.definitions[unDefinition.Identifier] = n
+		if n >= 1 {
+			return // we only send undef packets when n reaches zero
+		}
+	}*/
+	for i, connection := range dispatcher.connections {
+		if i == from {
+			continue
+		}
+		connection.InChan <- *unDefinition
+	}
+}
+
 func (dispatcher *Dispatcher) processChannels() {
 	chosen, value, ok := reflect.Select(dispatcher.cases)
+	chosen-- // there is an offset of 1, because the first element of dispatcher.cases is for the connection chan
 	if !ok {
 		log.Warning("One of the channels is broken.", chosen)
-		dispatcher.removeConnectionAt(chosen - 1)
+		for _, definition := range append(dispatcher.connections[chosen].actions, dispatcher.connections[chosen].events...) {
+			log.Info("Dispatching UnDefinition message")
+			unDefinition := rotonde.UnDefinition(*definition)
+			dispatcher.dispatchUnDefinition(chosen, &unDefinition)
+		}
+		dispatcher.removeConnectionAt(chosen)
 	} else {
 		switch data := value.Interface().(type) {
 		case rotonde.Event:
 			log.Info("Dispatching event")
-			dispatcher.dispatchEvent(chosen-1, &data)
+			dispatcher.dispatchEvent(chosen, &data)
 		case rotonde.Action:
 			log.Info("Dispatching action")
-			dispatcher.dispatchAction(chosen-1, &data)
+			dispatcher.dispatchAction(chosen, &data)
 		case rotonde.Subscription:
 			log.Info("Executing subscribe")
-			connection := dispatcher.connections[chosen-1]
+			connection := dispatcher.connections[chosen]
 			connection.addSubscription(data.Identifier)
 		case rotonde.Unsubscription:
 			log.Info("Executing unsubscribe")
-			connection := dispatcher.connections[chosen-1]
+			connection := dispatcher.connections[chosen]
 			connection.removeSubscription(data.Identifier)
 		case rotonde.Definition:
 			log.Info("Dispatching Definition message")
-			connection := dispatcher.connections[chosen-1]
+			connection := dispatcher.connections[chosen]
 			if data.Type == "action" {
-				connection.actions = append(connection.actions, &data)
+				connection.actions = rotonde.PushDefinition(connection.actions, &data)
 			} else if data.Type == "event" {
-				connection.events = append(connection.events, &data)
+				connection.events = rotonde.PushDefinition(connection.events, &data)
 			}
-
-			dispatcher.dispatchDefinition(chosen-1, &data)
+			dispatcher.dispatchDefinition(chosen, &data)
+		case rotonde.UnDefinition:
+			log.Info("Dispatching UnDefinition message")
+			connection := dispatcher.connections[chosen]
+			var definition *rotonde.Definition
+			if data.Type == "action" {
+				def, err := connection.actions.GetDefinitionForIdentifier(data.Identifier)
+				if err != nil {
+					log.Warning(err)
+					break
+				}
+				definition = def
+				connection.actions = rotonde.RemoveDefinition(connection.actions, data.Identifier)
+			} else if data.Type == "event" {
+				def, err := connection.events.GetDefinitionForIdentifier(data.Identifier)
+				if err != nil {
+					log.Warning(err)
+					break
+				}
+				definition = def
+				connection.events = rotonde.RemoveDefinition(connection.events, data.Identifier)
+			}
+			unDefinition := rotonde.UnDefinition(*definition)
+			dispatcher.dispatchUnDefinition(chosen, &unDefinition)
 		case *Connection:
 			log.Info("Add connection")
 			dispatcher.addConnection(data) // data is already a pointer
@@ -181,7 +271,6 @@ func (dispatcher *Dispatcher) processChannels() {
 	}
 }
 
-// Start starts the dispatcher
 func (dispatcher *Dispatcher) Start() {
 	for {
 		dispatcher.processChannels()
