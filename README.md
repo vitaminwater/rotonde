@@ -78,13 +78,52 @@ unpredictability implies that we keep `rotonde` as flexible as possible
 in term of good or even mandatory practices.
 
 
-
-# Basic scenario
+# Rotonde
 
 
 When you code with `rotonde` you have to think in term of modules.
 Each module is connected to `rotonde`, and communicate with each other
 though `rotonde`.
+
+## Events and actions
+
+In `rotonde` each module exposes its API through `events` and `actions`.
+`Events` and `actions` have similarities in their behavior, but they
+represent two different concepts.
+
+`Events` are a way for modules to send a message to the rest of the
+system.
+
+`Actions` are a way for modules to expose their features to the rest of
+the system.
+
+Declaring an `event` or `action` to rotonde is achieved by sending a `def`
+packet, please see the [def](https://github.com/HackerLoop/rotonde#def)
+section below.
+
+When a module exposes an `action` or `event` to rotonde, it has to specify an
+identifier and a list of fields. The fields are mostly here as a small
+documentation for the developper and as a way for the other modules to
+make sure that the action has the desired fields.
+
+The first thing that a module receives when connecting to `rotonde` is the list
+of all `events` and `actions` that have been defined on rotonde by other
+modules.
+This gives modules the opportunity to check that the system they are
+connected to has the required features available.
+
+## Events and actions routing
+
+Internally rotonde works like some kind of a router or dispatcher.
+The routing rules are slightly different for actions and events.
+
+When rotonde receives an action from a module, it looks at all modules
+that exposed this actions, and dispatches the action to them.
+
+When rotonde receives an `event` from a module, it only dispatches it to
+the modules that subscribed to this `event`.
+
+# The rotonde mindset
 
 Lets say you want to control various servo motors, through the
 [pca9685](http://www.adafruit.com/product/815), the first thing you do
