@@ -426,8 +426,8 @@ and you can unsubscribe from this identifier with:
 
 # Abstractions
 
-Rotonde can be used as-is, but having an abstraction above the
-websocket, maked much more efficient.
+Rotonde can be used as-is but having an abstraction above the
+websocket, makes it much more efficient.
 
 This is a list (in progress) of the available abstractions:
 
