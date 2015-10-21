@@ -424,6 +424,15 @@ and you can unsubscribe from this identifier with:
 }
 ```
 
+# Abstractions
+
+Rotonde can be used as-is, but having an abstraction above the
+websocket, maked much more efficient.
+
+This is a list (in progress) of the available abstractions:
+
+- [rotonde-client.js](https://github.com/HackerLoop/rotonde-client.js)
+
 # Libraries to port to rotonde
 
 The number of available modules is crucial for rotonde, the good news is
