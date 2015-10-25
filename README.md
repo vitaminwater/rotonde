@@ -1,5 +1,4 @@
 # Rotonde
----
 
 Rotonde makes connected hardware development accessible to every
 developer. It enables you to access low-level functions through a
