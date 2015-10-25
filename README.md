@@ -1,17 +1,8 @@
-# Motivations
+Rotonde unifies  the use of libraries and devices across languages and
+platforms.
 
-This project aims to resolves many of the common difficulties and caveats of modern embedded development.
-
-From previous observations, here is an unexhaustive list of the key concepts that should be obtained by using the `rotonde` project.
-
-- **Language-agnostic**. In a typical case, where the core of the architecture is usually a raspberryPi-like computer, there is no "way-to-go" like on iOS or android (which both have a forced unique language), this freedom of choice implies that useful pieces of codes or language bindings that you gather on the WEB can be of any language. The framework should not be tighted to a specific language, and if multiple languages are used, the usability of the framework should still feel native in all languages.
-- **Connected**. Building electronics in 2015 usually implies a connection to the WEB, which means that the framework give you the ability to seemlessly and securely add cloud code execution in the loop.
-- **Modular**. This framework has its origins in agencies, fastness of execution is a key feature of the framework. The framework should encourage a modular architecture, which allows highly efficient reuse of code from one project to another.
-- **Hardware abstraction**. One of the issue that you face when developping on embedded linux environment is the lack of unicity in the low level hardware access. For example, GPIO are not accessed the same way on a raspberryPI and an edison. The framework should greatly simplify the transfer of code from one architecture to another, without having to refactor existing code.
-- **UI friendly**. The whole system should be easily connected to a screen or any HID device, even a smartphone through wireless means, or both. any combination of WEB/touch screen/external device should be greatly simplified and interchangeable.
-- **Remotely debuggable**. Building custom devices implies remote support and debugging. The framework should provide an environment that is easily debuggable, even from a remote access. All modules should be individually observable, and interaction from a remote point is the key to cheap and responsive support.
-- **Cluster creation**. Inter connectivity of devices is a known complexe situation. This should be easily challenged by providing a clean way of creating meshes of devices. TODO check MQTT for amazon for IoT plateform
-
+Use the best libraries available, not just the one available for your
+favorite language.
 
 # Rotonde
 
