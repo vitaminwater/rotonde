@@ -14,7 +14,7 @@ available for your favorite language.*
 
 Go through the [setup guide](https://github.com/HackerLoop/rotonde#setup).
 
-Install this [module](https://github.com/HackerLoop/rotonde-client.js).
+Install this [module](https://github.com/HackerLoop/serial-port-json-server).
 
 Run both of them.
 
@@ -70,28 +70,32 @@ In `rotonde` each module exposes its API through `events` and `actions`.
 `Events` and `actions` have similarities in their behavior, but they
 represent two different concepts.
 
-`Events` are a way for modules to send a message to the rest of the
-system. These `event` can be sent spontaneously, or as a reply to an
-`action`.
+- _Events_:
+  - notify the rest of the system
+  - other modules can `subscribe` to them
+- _Actions_:
+  - the `API` of the available modules
+  - sent to call features from modules
 
-`Actions` are a way for modules to expose their features to the rest of
-the system. Other module can then use this action to tell the module
-what to do.
+```
+Modules first have to declare their events and actions to rotonde.
+```
 
 Declaring an `event` or `action` to rotonde is achieved by sending a `def`
 packet, please see the [def](https://github.com/HackerLoop/rotonde#def)
 section below.
 
 When a module exposes an `action` or `event` to rotonde, it has to specify an
-identifier and a list of fields. The fields are mostly here as a small
-documentation for the developper and as a way for the other modules to
-make sure that the action has the desired fields.
+identifier and a list of fields.
 
 The first thing that a module receives when connecting to `rotonde` is the list
 of all `events` and `actions` that have been defined on rotonde by other
 modules.
+
+```
 This gives modules the opportunity to check that the system they are
-connected to has the required features available.
+connected to has the _required features available_.
+```
 
 ## Events and actions routing
 
