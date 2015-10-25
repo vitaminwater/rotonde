@@ -1,8 +1,15 @@
-Rotonde unifies  the use of libraries and devices across languages and
-platforms.
+Rotonde makes connected hardware development accessible to every
+developer. It enables you to access low-level functions through a
+language-agnostic API. 
 
-Use the best libraries available, not just the one available for your
-favorite language.
+*Rotonde unifies the use of libraries and devices across languages and
+platforms, so you can use the best libraries available, not just the one
+available for your favorite language.*
+
+- Language agnostic
+- Hardware abstraction
+- Connected
+- Remote coding on any hardware
 
 # Rotonde
 
