@@ -4,7 +4,7 @@
 developer. It enables you to access low-level functions through a
 language-agnostic API. 
 
-*`Rotondez unifies the use of libraries and devices across languages and
+*`Rotonde` unifies the use of libraries and devices across languages and
 platforms, so you can use the best libraries available, not just the one
 available for your favorite language.*
 
