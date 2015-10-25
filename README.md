@@ -13,6 +13,8 @@ available for your favorite language.*
 
 # Live example
 
+![](http://cdn.meme.am/instances/500x/65249201.jpg)
+
 Go through the [setup guide](https://github.com/HackerLoop/rotonde#setup).
 
 Install this [module](https://github.com/HackerLoop/rotonde-client.js).
