@@ -1,6 +1,6 @@
 # Rotonde
 
-- `rotonde` makes connected hardware development accessible to every developers.
+- `rotonde` makes IoT development accessible to every developers.
 - with `rotonde` you use the best libraries available, not just the one available for your favorite language.
 - and it's as easy as a web `API`:)
 
