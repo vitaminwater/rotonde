@@ -55,8 +55,8 @@ the `SERIAL_PORTMESSAGE` by sending this packet:
 [SERIAL_PORTMESSAGE subscribe packet]
 ```
 
-> And that's it, you just opened a serial port on you raspberry PI, that's
-> as easy as that with rotonde.
+And that's it, you just opened a serial port on you raspberry PI, that's
+as easy as that with rotonde.
 
 # Rotonde mindset
 
