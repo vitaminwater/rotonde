@@ -95,7 +95,7 @@ Clear the websocket output and copy-paste this JSON object into to the websocket
   "payload":{
     "identifier":"SERIAL_OPEN",
     "data":{
-      "port":"/dev/ttyAMA0",
+      "port":"/dev/ttyAMA0", // internal serial port on raspberry PI
       "baudrate":9600
     }
   }
