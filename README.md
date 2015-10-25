@@ -42,7 +42,7 @@ In the extension's console you should have something like this:
 These are the available events and actions. All those starting with
 `SERIAL_` are from our serial module.
 
-We are going to use and open a serial port on the system by
+We are going to use it and open a serial port on the system by
 sending a `SERIAL_OPEN` action.
 
 Clear the websocket output and copy-paste this JSON object into to the websocket extension:
