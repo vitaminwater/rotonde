@@ -11,7 +11,55 @@ available for your favorite language.*
 - Connected
 - Remote coding on any hardware
 
-# Rotonde
+# Live example
+
+Go through the [setup guide](https://github.com/HackerLoop/rotonde#setup).
+
+Install this [module](https://github.com/HackerLoop/rotonde-client.js).
+
+Run both of them.
+
+*TODO: make install+run script*
+
+Install this [chrome extension](https://chrome.google.com/webstore/detail/simple-websocket-client/pfdhoblngboilpfeibdedpjgfnlcodoo?hl=en).
+
+Now from the extension connect to rotonde on your board's IP:
+
+```
+ws://[ip address]:4224/
+```
+
+Click `open`, you are now connected to rotonde.
+
+In the extension's console you should have something like this:
+
+```
+[put initial JSON definition messages, beautified]
+```
+
+These are the available events and actions. All those starting with
+`SERIAL_` are from our serial module.
+
+We are going to use and open a serial port on the system by
+sending a `SERIAL_OPEN` action.
+
+Clear the websocket output and copy-paste this JSON object into to the websocket extension:
+```
+[SERIAL_OPEN action message]
+```
+hit ctrl+enter to send it to rotonde.
+
+If your serial port is opened you can now listen to it by subsribing to
+the `SERIAL_PORTMESSAGE` by sending this packet:
+
+```
+[SERIAL_PORTMESSAGE subscribe packet]
+```
+
+And that's it, you just opened a serial port on you raspberry PI, that's
+as easy as that with rotonde.
+
+# Rotonde mindset
 
 When you code with `rotonde` you have to think in term of modules.
 Each module is connected to `rotonde`, and communicate with each other
