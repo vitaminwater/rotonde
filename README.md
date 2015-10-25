@@ -34,6 +34,7 @@ In the extension's console you should have something like this (stripped
 most of them for clarity):
 
 ```
+[...]
 {  
    "type":"def",
    "payload":{  
@@ -78,6 +79,7 @@ most of them for clarity):
       ]
    }
 }
+[...]
 ```
 
 These are the available events and actions. All those starting with
