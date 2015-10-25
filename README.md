@@ -55,8 +55,8 @@ the `SERIAL_PORTMESSAGE` by sending this packet:
 [SERIAL_PORTMESSAGE subscribe packet]
 ```
 
-And that's it, you just opened a serial port on you raspberry PI, that's
-as easy as that with rotonde.
+> And that's it, you just opened a serial port on you raspberry PI, that's
+> as easy as that with rotonde.
 
 # Rotonde mindset
 
@@ -71,15 +71,13 @@ In `rotonde` each module exposes its API through `events` and `actions`.
 represent two different concepts.
 
 - _Events_:
-  - notify the rest of the system
+  - sent by modules to notify the rest of the system
   - other modules can `subscribe` to them
 - _Actions_:
   - the `API` of the available modules
-  - sent to call features from modules
+  - sent by modules to call features from other modules
 
-```
 Modules first have to declare their events and actions to rotonde.
-```
 
 Declaring an `event` or `action` to rotonde is achieved by sending a `def`
 packet, please see the [def](https://github.com/HackerLoop/rotonde#def)
@@ -92,10 +90,8 @@ The first thing that a module receives when connecting to `rotonde` is the list
 of all `events` and `actions` that have been defined on rotonde by other
 modules.
 
-```
-This gives modules the opportunity to check that the system they are
-connected to has the _required features available_.
-```
+> This gives modules the opportunity to check that the system they are
+> connected to has the required features available.
 
 ## Events and actions routing
 
