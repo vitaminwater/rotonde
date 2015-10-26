@@ -13,7 +13,8 @@ Go through the [setup guide](https://github.com/HackerLoop/rotonde#setup).
 
 Install this [module](https://github.com/HackerLoop/serial-port-json-server).
 
-Run both of them.
+Run both of them, on your raspberry PI for example, but these two can work
+on you laptop too, not sure about Windows tho...
 
 *TODO: make install+run script*
 
