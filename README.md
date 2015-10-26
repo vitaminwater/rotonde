@@ -3,7 +3,7 @@
 - `rotonde` makes IoT development accessible to every developers.
 - just pick you favorite language and start coding on your favorite platform.
 - with `rotonde` you use the best libraries available, not just the one available for your favorite language.
-- as easy to use as a web `API`:)
+- and it's as easy to use as a web `API`:)
 
 # Live example
 
