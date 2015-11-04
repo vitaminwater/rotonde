@@ -65,7 +65,8 @@ func (connection *Connection) isSubscribed(identifier string) bool {
 }
 
 type Dispatcher struct {
-	//definitions		 map[string]int				// this is to keep track of the
+	definitionsLog map[string]int // this is to keep track of the
+	definitions    rotonde.Definitions
 	//available definitions, it maps identifiers to the number of time a
 	//definition has been declared by a module, and dispatched defs and
 	//undefs packets when needed (please see comments above the
@@ -80,7 +81,8 @@ func NewDispatcher() *Dispatcher {
 	dispatcher.connections = make([]*Connection, 0, 100)
 	dispatcher.cases = make([]reflect.SelectCase, 0, 100)
 	dispatcher.connectionChan = make(chan *Connection, 10) // TODO try unbuffered chan
-	//dispatcher.definitions = make(map[string]int)
+	dispatcher.definitionsLog = make(map[string]int)
+	dispatcher.definitions = make([]*rotonde.Definition, 0, 100)
 
 	// first case is for the connectionChan
 	dispatcher.cases = append(dispatcher.cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(dispatcher.connectionChan)})
@@ -93,13 +95,8 @@ func (dispatcher *Dispatcher) AddConnection(connection *Connection) {
 }
 
 func (dispatcher *Dispatcher) addConnection(connection *Connection) {
-	for _, c := range dispatcher.connections {
-		for _, e := range c.events {
-			connection.InChan <- *e
-		}
-		for _, a := range c.actions {
-			connection.InChan <- *a
-		}
+	for _, def := range dispatcher.definitions {
+		connection.InChan <- *def
 	}
 
 	dispatcher.connections = append(dispatcher.connections, connection)
@@ -146,9 +143,14 @@ func (dispatcher *Dispatcher) dispatchAction(from int, action *rotonde.Action) {
 	}
 }
 
+// Edit: I reverted the commented code, the idea now it to thrown warnings (or errors?)
+// when multiple definitions with same identifier have different fields
+// TODO create field unicity check
+// TODO check if no same identifier in action an event
+//
 // The code commented in the two next functions changes the behaviour
 // of rotonde when facing multiple modules declaring the same
-// definition (eg. with same identidiers). Currently, all def and undef packets are sent, the module
+// definition (eg. with same identifiers). Currently, all def and undef packets are sent, the module
 // has to be able to determine if the action or event it requires is of
 // the right structure.
 // This is actually part of a larger discussion about version management
@@ -170,12 +172,13 @@ func (dispatcher *Dispatcher) dispatchAction(from int, action *rotonde.Action) {
 // definition and actions/events are given with the right structure.
 
 func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *rotonde.Definition) {
-	/*if n, ok := dispatcher.definitions[definition.Identifier]; ok == true && n >= 1 {
+	if n, ok := dispatcher.definitionsLog[definition.Identifier]; ok == true && n >= 1 {
 		n++
-		dispatcher.definitions[definition.Identifier] = n
+		dispatcher.definitionsLog[definition.Identifier] = n
 		return // we only send def packets when it is a new packet (when ok == false or n == 0)
 	}
-	dispatcher.definitions[definition.Identifier] = 1*/
+	dispatcher.definitionsLog[definition.Identifier] = 1
+	dispatcher.definitions = rotonde.PushDefinition(dispatcher.definitions, definition)
 	for i, connection := range dispatcher.connections {
 		if i == from {
 			continue
@@ -185,16 +188,17 @@ func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *rotonde.D
 }
 
 func (dispatcher *Dispatcher) dispatchUnDefinition(from int, unDefinition *rotonde.UnDefinition) {
-	/*if n, ok := dispatcher.definitions[unDefinition.Identifier]; ok == false {
+	if n, ok := dispatcher.definitionsLog[unDefinition.Identifier]; ok == false {
 		log.Warning("calling dispatchUnDefinition with a definition that has never been registered")
 		return
 	} else {
 		n--
-		dispatcher.definitions[unDefinition.Identifier] = n
+		dispatcher.definitionsLog[unDefinition.Identifier] = n
 		if n >= 1 {
 			return // we only send undef packets when n reaches zero
 		}
-	}*/
+	}
+	dispatcher.definitions = rotonde.RemoveDefinition(dispatcher.definitions, unDefinition.Identifier)
 	for i, connection := range dispatcher.connections {
 		if i == from {
 			continue
