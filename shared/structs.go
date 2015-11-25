@@ -58,6 +58,7 @@ type FieldDefinition struct {
 type Definition struct {
 	Identifier string `json:"identifier"`
 	Type       string `json:"type"` // action or event
+	IsArray		 bool		`json:"isarray"`
 
 	Fields FieldDefinitions `json:"fields"`
 }

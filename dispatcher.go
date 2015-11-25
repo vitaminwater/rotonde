@@ -66,11 +66,12 @@ func (connection *Connection) isSubscribed(identifier string) bool {
 
 type Dispatcher struct {
 	definitionsLog map[string]int // this is to keep track of the
-	definitions    rotonde.Definitions
 	//available definitions, it maps identifiers to the number of time a
 	//definition has been declared by a module, and dispatched defs and
 	//undefs packets when needed (please see comments above the
 	//dispatchDefinition function).
+
+	definitions    rotonde.Definitions
 	connections    []*Connection
 	cases          []reflect.SelectCase // cases for the select case of the main loop, the first element is for the connectionChan, the others are for the outChans of the connections
 	connectionChan chan *Connection     // connectionChan receives the new connections to add
