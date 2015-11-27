@@ -222,21 +222,21 @@ func (dispatcher *Dispatcher) processChannels() {
 	} else {
 		switch data := value.Interface().(type) {
 		case rotonde.Event:
-			log.Info("Dispatching event")
+			log.Info("Dispatching event ", data.Identifier)
 			dispatcher.dispatchEvent(chosen, &data)
 		case rotonde.Action:
-			log.Info("Dispatching action")
+			log.Info("Dispatching action ", data.Identifier)
 			dispatcher.dispatchAction(chosen, &data)
 		case rotonde.Subscription:
-			log.Info("Executing subscribe")
+			log.Info("Executing subscribe ", data.Identifier)
 			connection := dispatcher.connections[chosen]
 			connection.addSubscription(data.Identifier)
 		case rotonde.Unsubscription:
-			log.Info("Executing unsubscribe")
+			log.Info("Executing unsubscribe ", data.Identifier)
 			connection := dispatcher.connections[chosen]
 			connection.removeSubscription(data.Identifier)
 		case rotonde.Definition:
-			log.Info("Dispatching Definition message")
+			log.Info("Dispatching Definition message ", data.Identifier)
 			connection := dispatcher.connections[chosen]
 			if data.Type == "action" {
 				connection.actions = rotonde.PushDefinition(connection.actions, &data)
@@ -245,7 +245,7 @@ func (dispatcher *Dispatcher) processChannels() {
 			}
 			dispatcher.dispatchDefinition(chosen, &data)
 		case rotonde.UnDefinition:
-			log.Info("Dispatching UnDefinition message")
+			log.Info("Dispatching UnDefinition message ", data.Identifier)
 			connection := dispatcher.connections[chosen]
 			var definition *rotonde.Definition
 			if data.Type == "action" {
