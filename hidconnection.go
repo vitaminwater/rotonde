@@ -105,11 +105,14 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 				for currentOffset < len(jsonPacket) {
 					toWriteLength := len(jsonPacket) - currentOffset
 					// packet on the HID link can't be > MaxHIDFrameSize, split it if it's the case.
-					if toWriteLength > MaxHIDFrameSize-2 {
-						toWriteLength = MaxHIDFrameSize - 2
+					if toWriteLength > MaxHIDFrameSize-3 {
+						toWriteLength = MaxHIDFrameSize - 3
 					}
 
-					copy(fixedLengthWriteBuffer, jsonPacket[currentOffset:currentOffset+toWriteLength])
+					fixedLengthWriteBuffer[0] = 0x3c
+					fixedLengthWriteBuffer[1] = 0x42
+					fixedLengthWriteBuffer[2] = byte(toWriteLength)
+					copy(fixedLengthWriteBuffer[3:], jsonPacket[currentOffset:currentOffset+toWriteLength])
 
 					n, err := cc.Write(fixedLengthWriteBuffer)
 					if err != nil {
@@ -117,8 +120,8 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 						errChan <- err
 						return
 					}
-					if n > 2 {
-						currentOffset += n - 2
+					if n > 3 {
+						currentOffset += n - 3
 					}
 				}
 
