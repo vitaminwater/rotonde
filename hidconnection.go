@@ -20,22 +20,24 @@ func StartHID(d *Dispatcher) {
 	var isOpen, openned, closed = func() (func(*hid.DeviceInfo) bool, func(*hid.DeviceInfo), func(*hid.DeviceInfo)) {
 		var mutex = new(sync.Mutex)
 		var openPorts = map[string]bool{}
+
+		var deviceId = func(device *hid.DeviceInfo) string {
+			return fmt.Sprintf("%x:%x", device.VendorId, device.ProductId)
+		}
+
 		return func(device *hid.DeviceInfo) bool {
 				mutex.Lock()
 				defer mutex.Unlock()
-				var port = fmt.Sprintf("%x:%x", device.VendorId, device.ProductId)
-				isOpen, ok := openPorts[port]
+				isOpen, ok := openPorts[deviceId(device)]
 				return ok && isOpen
 			}, func(device *hid.DeviceInfo) {
 				mutex.Lock()
 				defer mutex.Unlock()
-				var port = fmt.Sprintf("%x:%x", device.VendorId, device.ProductId)
-				openPorts[port] = true
+				openPorts[deviceId(device)] = true
 			}, func(device *hid.DeviceInfo) {
 				mutex.Lock()
 				defer mutex.Unlock()
-				var port = fmt.Sprintf("%x:%x", device.VendorId, device.ProductId)
-				openPorts[port] = false
+				openPorts[deviceId(device)] = false
 			}
 	}()
 
