@@ -91,6 +91,10 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 		for {
 			select {
 			case dispatcherPacket := <-c.InChan:
+				if _, ok := dispatcherPacket.(rotonde.Definition); ok == true {
+					log.Info("USB skipping Definition messages")
+					continue
+				}
 				jsonPacket, err := rotonde.ToJSON(dispatcherPacket)
 				if err != nil {
 					log.Warning(err)
@@ -105,7 +109,6 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 						toWriteLength = MaxHIDFrameSize - 2
 					}
 
-					// USB HID link requires a reportID and packet length as first bytes
 					copy(fixedLengthWriteBuffer, jsonPacket[currentOffset:currentOffset+toWriteLength])
 
 					n, err := cc.Write(fixedLengthWriteBuffer)
