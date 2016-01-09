@@ -13,7 +13,8 @@ func main() {
 
 	d := NewDispatcher()
 
-	go Start(d, *port)
+	go StartHID(d)
+	go StartWebsocket(d, *port)
 
 	go d.Start()
 

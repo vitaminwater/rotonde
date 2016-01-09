@@ -1,8 +1,13 @@
 package rotonde
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/mitchellh/mapstructure"
 )
 
 // wrapper for json serialized connections
@@ -58,7 +63,7 @@ type FieldDefinition struct {
 type Definition struct {
 	Identifier string `json:"identifier"`
 	Type       string `json:"type"` // action or event
-	IsArray		 bool		`json:"isarray"`
+	IsArray    bool   `json:"isarray"`
 
 	Fields FieldDefinitions `json:"fields"`
 }
@@ -91,4 +96,63 @@ type Subscription struct {
 // Unsubscription removes an objectID from the subscriptions of the sending connection
 type Unsubscription struct {
 	Identifier string `json:"identifier"`
+}
+
+func ToJSON(object interface{}) ([]byte, error) {
+	var packet Packet
+	switch data := object.(type) {
+	case Event:
+		packet = Packet{Type: "event", Payload: data}
+	case Action:
+		packet = Packet{Type: "action", Payload: data}
+	case Definition:
+		packet = Packet{Type: "def", Payload: data}
+	case UnDefinition:
+		packet = Packet{Type: "undef", Payload: data}
+	default:
+		log.Info("Oops unknown packet: ", packet)
+	}
+
+	jsonPacket, err := json.Marshal(packet)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonPacket, nil
+}
+
+func FromJSON(reader io.Reader) (interface{}, error) {
+	packet := Packet{}
+	decoder := json.NewDecoder(reader)
+	if err := decoder.Decode(&packet); err != nil {
+		return nil, err
+	}
+
+	switch packet.Type {
+	case "event":
+		event := Event{}
+		mapstructure.Decode(packet.Payload, &event)
+		return event, nil
+	case "action":
+		action := Action{}
+		mapstructure.Decode(packet.Payload, &action)
+		return action, nil
+	case "sub":
+		subscription := Subscription{}
+		mapstructure.Decode(packet.Payload, &subscription)
+		return subscription, nil
+	case "unsub":
+		unsubscription := Unsubscription{}
+		mapstructure.Decode(packet.Payload, &unsubscription)
+		return unsubscription, nil
+	case "def":
+		definition := Definition{}
+		mapstructure.Decode(packet.Payload, &definition)
+		return definition, nil
+	case "undef":
+		unDefinition := UnDefinition{}
+		mapstructure.Decode(packet.Payload, &unDefinition)
+		return unDefinition, nil
+	}
+	return nil, fmt.Errorf("%s not found", packet.Type)
 }

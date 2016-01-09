@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
@@ -9,11 +8,10 @@ import (
 	"github.com/HackerLoop/rotonde/shared"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
-	"github.com/mitchellh/mapstructure"
 )
 
 // Start the websocket server, each peer connecting to this websocket will be added as a connection to the dispatcher
-func Start(d *Dispatcher, port int) {
+func StartWebsocket(d *Dispatcher, port int) {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  2048,
 		WriteBufferSize: 2048,
@@ -31,7 +29,7 @@ func Start(d *Dispatcher, port int) {
 
 		defer conn.Close()
 
-		startConnection(conn, d)
+		startWebsocketConnection(conn, d)
 	})
 
 	go http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
@@ -39,7 +37,7 @@ func Start(d *Dispatcher, port int) {
 	select {}
 }
 
-func startConnection(conn *websocket.Conn, d *Dispatcher) {
+func startWebsocketConnection(conn *websocket.Conn, d *Dispatcher) {
 	c := NewConnection()
 	d.AddConnection(c)
 	defer c.Close()
@@ -50,36 +48,17 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 	go func() {
 		defer wg.Done()
 
-		var jsonPacket []byte
-		var err error
-		var packet rotonde.Packet
-
 		for {
 			select {
 			case dispatcherPacket := <-c.InChan:
-				switch data := dispatcherPacket.(type) {
-				case rotonde.Event:
-					packet = rotonde.Packet{Type: "event", Payload: data}
-				case rotonde.Action:
-					packet = rotonde.Packet{Type: "action", Payload: data}
-				case rotonde.Definition:
-					packet = rotonde.Packet{Type: "def", Payload: data}
-				case rotonde.UnDefinition:
-					packet = rotonde.Packet{Type: "undef", Payload: data}
-				default:
-					log.Info("Oops unknown packet: ", dispatcherPacket)
-				}
-
-				jsonPacket, err = json.Marshal(packet)
+				jsonPacket, err := rotonde.ToJSON(dispatcherPacket)
 				if err != nil {
 					log.Warning(err)
 				}
-
 				if err := conn.WriteMessage(websocket.TextMessage, jsonPacket); err != nil {
 					log.Warning(err)
 					return
 				}
-
 			case <-errChan:
 				return
 			}
@@ -90,8 +69,6 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 	go func() {
 		defer wg.Done()
 
-		var dispatcherPacket interface{}
-
 		for {
 			messageType, reader, err := conn.NextReader()
 			if err != nil {
@@ -100,40 +77,10 @@ func startConnection(conn *websocket.Conn, d *Dispatcher) {
 				return
 			}
 			if messageType == websocket.TextMessage {
-				packet := rotonde.Packet{}
-				decoder := json.NewDecoder(reader)
-				if err := decoder.Decode(&packet); err != nil {
+				dispatcherPacket, err := rotonde.FromJSON(reader)
+				if err != nil {
 					log.Warning(err)
-					continue
 				}
-
-				switch packet.Type {
-				case "event":
-					event := rotonde.Event{}
-					mapstructure.Decode(packet.Payload, &event)
-					dispatcherPacket = event
-				case "action":
-					action := rotonde.Action{}
-					mapstructure.Decode(packet.Payload, &action)
-					dispatcherPacket = action
-				case "sub":
-					subscription := rotonde.Subscription{}
-					mapstructure.Decode(packet.Payload, &subscription)
-					dispatcherPacket = subscription
-				case "unsub":
-					unsubscription := rotonde.Unsubscription{}
-					mapstructure.Decode(packet.Payload, &unsubscription)
-					dispatcherPacket = unsubscription
-				case "def":
-					definition := rotonde.Definition{}
-					mapstructure.Decode(packet.Payload, &definition)
-					dispatcherPacket = definition
-				case "undef":
-					unDefinition := rotonde.UnDefinition{}
-					mapstructure.Decode(packet.Payload, &unDefinition)
-					dispatcherPacket = unDefinition
-				}
-
 				c.OutChan <- dispatcherPacket
 			}
 		}
