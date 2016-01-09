@@ -57,7 +57,7 @@ func StartHID(d *Dispatcher) {
 					time.Sleep(1 * time.Second)
 					continue
 				}
-				log.Info("HID device successfully openned %04x:%04x", device.VendorId, device.ProductId)
+				log.Infof("HID device successfully openned 0x%04x:0x%04x", device.VendorId, device.ProductId)
 
 				go func() {
 					openned(device)
@@ -69,7 +69,7 @@ func StartHID(d *Dispatcher) {
 		}
 	}()
 
-	log.Info("HID Listening for vendorId: %04x", ROTONDE_VENDOR_ID)
+	log.Infof("HID Listening for vendorId: 0x%04x", ROTONDE_VENDOR_ID)
 }
 
 func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
@@ -147,7 +147,7 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 	}()
 	log.Info("Treating messages")
 	wg.Wait()
-	log.Info("HID Connection %04x:%04x closed", device.VendorId, device.ProductId)
+	log.Infof("HID Connection 0x%04x:0x%04x closed", device.VendorId, device.ProductId)
 }
 
 func frameReader(wg *sync.WaitGroup, cc *hid.Device, c chan io.Reader, errChan chan error) {
