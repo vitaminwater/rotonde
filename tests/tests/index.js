@@ -30,10 +30,12 @@ ws.on('message', (data) => {
     case 'def':
       console.log('received', packet.payload.type, 'definition', packet.payload);
       if (packet.payload.type == 'action') {
-        ws.send(JSON.stringify({
-          type: 'action',
-          payload: defToObject(packet.payload),
-        }));
+        setInterval(() => {
+          ws.send(JSON.stringify({
+            type: 'action',
+            payload: defToObject(packet.payload),
+          }));
+        }, 10);
       } else {
         ws.send(JSON.stringify({
           type: 'sub',

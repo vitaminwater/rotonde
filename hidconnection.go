@@ -15,6 +15,7 @@ import (
 
 const ROTONDE_VENDOR_ID = 0x03EB
 const MaxHIDFrameSize = 64
+const HeaderLength = 4
 
 func StartHID(d *Dispatcher) {
 	var isOpen, openned, closed = func() (func(*hid.DeviceInfo) bool, func(*hid.DeviceInfo), func(*hid.DeviceInfo)) {
@@ -81,6 +82,10 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 	d.AddConnection(c)
 	defer c.Close()
 
+	if _, err := cc.SendFeatureReport([]byte{0x0, 0x0, 0x0, 0x0, 0x0}); err != nil {
+		log.Warning(err)
+	}
+
 	errChan := make(chan error)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -105,14 +110,15 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 				for currentOffset < len(jsonPacket) {
 					toWriteLength := len(jsonPacket) - currentOffset
 					// packet on the HID link can't be > MaxHIDFrameSize, split it if it's the case.
-					if toWriteLength > MaxHIDFrameSize-3 {
-						toWriteLength = MaxHIDFrameSize - 3
+					if toWriteLength > MaxHIDFrameSize-HeaderLength {
+						toWriteLength = MaxHIDFrameSize - HeaderLength
 					}
 
 					fixedLengthWriteBuffer[0] = 0x3c
 					fixedLengthWriteBuffer[1] = 0x42
 					fixedLengthWriteBuffer[2] = byte(toWriteLength)
-					copy(fixedLengthWriteBuffer[3:], jsonPacket[currentOffset:currentOffset+toWriteLength])
+					fixedLengthWriteBuffer[3] = byte(toWriteLength >> 8)
+					copy(fixedLengthWriteBuffer[HeaderLength:], jsonPacket[currentOffset:currentOffset+toWriteLength])
 
 					n, err := cc.Write(fixedLengthWriteBuffer)
 					if err != nil {
@@ -120,8 +126,8 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 						errChan <- err
 						return
 					}
-					if n > 3 {
-						currentOffset += n - 3
+					if n > HeaderLength {
+						currentOffset += n - HeaderLength
 					}
 				}
 
@@ -163,7 +169,7 @@ func frameReader(wg *sync.WaitGroup, cc *hid.Device, c chan io.Reader, errChan c
 	defer close(c)
 	var buffer bytes.Buffer
 	var version uint8
-	var length uint8
+	var length uint16
 	var crc uint8
 	packet := make([]byte, MaxHIDFrameSize)
 
@@ -177,7 +183,7 @@ func frameReader(wg *sync.WaitGroup, cc *hid.Device, c chan io.Reader, errChan c
 				return err
 			}
 			if n == 0 {
-				continue
+				return fmt.Errorf("Empty message usually means disconnection")
 			}
 
 			buffer.Write(packet[0:n])
@@ -185,18 +191,24 @@ func frameReader(wg *sync.WaitGroup, cc *hid.Device, c chan io.Reader, errChan c
 		return nil
 	}
 
-	readUpToFrame := func() {
+	readUpToFrame := func() error {
 		for {
 			if _, err := buffer.ReadBytes(0x3c); err != nil {
-				readNBytes(64)
+				if err = readNBytes(64); err != nil {
+					return err
+				}
 				continue
 			}
 			break
 		}
+		return nil
 	}
 
 	for {
-		readUpToFrame()
+		if err := readUpToFrame(); err != nil {
+			errChan <- err
+			return
+		}
 
 		if err := readNBytes(2); err != nil {
 			errChan <- err
