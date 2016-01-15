@@ -63,12 +63,12 @@ func StartHID(d *Dispatcher) {
 
 				go func() {
 					openned(device)
-					err := startHIDConnection(device, cc, d)
-					closed(device)
-					if err != nil {
+
+					if err := startHIDConnection(device, cc, d); err != nil {
 						log.Warning(err)
 						time.Sleep(time.Second * 3)
 					}
+					closed(device)
 				}()
 			}
 			time.Sleep(1 * time.Second)
