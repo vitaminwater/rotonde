@@ -86,6 +86,7 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 	}
 
 	errChan := make(chan error)
+	var connErr error
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -130,7 +131,7 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 					}
 				}
 
-			case <-errChan:
+			case connErr = <-errChan:
 				return
 			}
 		}
@@ -142,6 +143,10 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 	log.Info("Treating messages")
 	wg.Wait()
 	log.Infof("HID Connection 0x%04x:0x%04x closed", device.VendorId, device.ProductId)
+	if connErr != nil {
+		log.Warning(connErr)
+		time.Sleep(time.Second * 3)
+	}
 }
 
 func frameReader(wg *sync.WaitGroup, cc *hid.Device, c *Connection, errChan chan error) {
