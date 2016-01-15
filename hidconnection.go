@@ -66,10 +66,8 @@ func StartHID(d *Dispatcher) {
 					err := startHIDConnection(device, cc, d)
 					closed(device)
 					if err != nil {
-						if err != nil {
-							log.Warning(err)
-							time.Sleep(time.Second * 3)
-						}
+						log.Warning(err)
+						time.Sleep(time.Second * 3)
 					}
 				}()
 			}
