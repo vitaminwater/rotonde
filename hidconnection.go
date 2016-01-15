@@ -63,8 +63,14 @@ func StartHID(d *Dispatcher) {
 
 				go func() {
 					openned(device)
-					startHIDConnection(device, cc, d)
+					err := startHIDConnection(device, cc, d)
 					closed(device)
+					if err != nil {
+						if err != nil {
+							log.Warning(err)
+							time.Sleep(time.Second * 3)
+						}
+					}
 				}()
 			}
 			time.Sleep(1 * time.Second)
@@ -74,7 +80,7 @@ func StartHID(d *Dispatcher) {
 	log.Infof("HID Listening for vendorId: 0x%04x", ROTONDE_VENDOR_ID)
 }
 
-func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
+func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) error {
 	defer cc.Close()
 
 	c := NewConnection()
@@ -143,10 +149,7 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 	log.Info("Treating messages")
 	wg.Wait()
 	log.Infof("HID Connection 0x%04x:0x%04x closed", device.VendorId, device.ProductId)
-	if connErr != nil {
-		log.Warning(connErr)
-		time.Sleep(time.Second * 3)
-	}
+	return connErr
 }
 
 func frameReader(wg *sync.WaitGroup, cc *hid.Device, c *Connection, errChan chan error) {
