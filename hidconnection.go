@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"io"
 	"sync"
 	"time"
 
@@ -137,36 +136,16 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) {
 		}
 	}()
 
-	frameChan := make(chan io.Reader, 10)
 	wg.Add(1)
-	go frameReader(&wg, cc, frameChan, errChan)
+	go frameReader(&wg, cc, c, errChan)
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		for {
-			reader, ok := <-frameChan
-			if ok == false {
-				log.Warning("framChan channel closed")
-				return
-			}
-			dispatcherPacket, err := rotonde.FromJSON(reader)
-			if err != nil {
-				log.Warning("Failed to decode packet")
-				return
-			}
-			c.OutChan <- dispatcherPacket
-		}
-	}()
 	log.Info("Treating messages")
 	wg.Wait()
 	log.Infof("HID Connection 0x%04x:0x%04x closed", device.VendorId, device.ProductId)
 }
 
-func frameReader(wg *sync.WaitGroup, cc *hid.Device, c chan io.Reader, errChan chan error) {
+func frameReader(wg *sync.WaitGroup, cc *hid.Device, c *Connection, errChan chan error) {
 	defer wg.Done()
-	defer close(c)
 	var buffer bytes.Buffer
 	var version uint8
 	var length uint16
@@ -239,6 +218,11 @@ func frameReader(wg *sync.WaitGroup, cc *hid.Device, c chan io.Reader, errChan c
 			return
 		}
 
-		c <- bytes.NewReader(body)
+		dispatcherPacket, err := rotonde.FromJSON(bytes.NewReader(body))
+		if err != nil {
+			errChan <- fmt.Errorf("Failed to decode packet")
+			return
+		}
+		c.OutChan <- dispatcherPacket
 	}
 }
