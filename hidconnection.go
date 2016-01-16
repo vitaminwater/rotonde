@@ -61,14 +61,13 @@ func StartHID(d *Dispatcher) {
 				}
 				log.Infof("HID device successfully openned 0x%04x:0x%04x", device.VendorId, device.ProductId)
 
+				openned(device)
 				go func() {
-					openned(device)
-
+					defer closed(device)
 					if err := startHIDConnection(device, cc, d); err != nil {
 						log.Warning(err)
 						time.Sleep(time.Second * 3)
 					}
-					closed(device)
 				}()
 			}
 			time.Sleep(1 * time.Second)
