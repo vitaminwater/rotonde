@@ -8,7 +8,7 @@ import (
 )
 
 // ChanQueueLength buffered channel length
-const ChanQueueLength = 10
+const ChanQueueLength = 100
 
 // Connection : basic interface representing a connection to the dispatcher
 type Connection struct {
