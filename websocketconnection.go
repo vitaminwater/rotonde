@@ -42,7 +42,8 @@ func startWebsocketConnection(conn *websocket.Conn, d *Dispatcher) {
 	d.AddConnection(c)
 	defer c.Close()
 
-	errChan := make(chan error)
+	errChan := make(chan error, 1)
+	defer close(errChan)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -60,6 +61,7 @@ func startWebsocketConnection(conn *websocket.Conn, d *Dispatcher) {
 					return
 				}
 			case <-errChan:
+				log.Warning("Got error from errChan")
 				return
 			}
 		}
@@ -72,7 +74,7 @@ func startWebsocketConnection(conn *websocket.Conn, d *Dispatcher) {
 		for {
 			messageType, reader, err := conn.NextReader()
 			if err != nil {
-				log.Println(err)
+				log.Warning(err)
 				errChan <- err
 				return
 			}
@@ -86,6 +88,13 @@ func startWebsocketConnection(conn *websocket.Conn, d *Dispatcher) {
 		}
 	}()
 
-	log.Println("Treating messages")
+	log.Info("Treating messages")
 	wg.Wait()
+	select {
+	case <-errChan:
+		log.Warning("errChan was not empty")
+	default:
+		log.Warning("errChan was empty")
+	}
+	log.Info("Websocket connection end")
 }

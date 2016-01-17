@@ -31,6 +31,16 @@ func NewConnection() *Connection {
 	return connection
 }
 
+func (connection *Connection) Write(m interface{}) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Warning("Recovered write on closed channel")
+			log.Warning(err)
+		}
+	}()
+	connection.InChan <- m
+}
+
 func (connection *Connection) Close() {
 	close(connection.OutChan)
 	close(connection.InChan)
@@ -97,7 +107,7 @@ func (dispatcher *Dispatcher) AddConnection(connection *Connection) {
 
 func (dispatcher *Dispatcher) addConnection(connection *Connection) {
 	for _, def := range dispatcher.definitions {
-		connection.InChan <- *def
+		connection.Write(*def)
 	}
 
 	dispatcher.connections = append(dispatcher.connections, connection)
@@ -125,7 +135,7 @@ mainLoop:
 
 		for _, identifier := range connection.subscriptions {
 			if identifier == event.Identifier {
-				connection.InChan <- *event
+				connection.Write(*event)
 				continue mainLoop
 			}
 		}
@@ -139,7 +149,7 @@ func (dispatcher *Dispatcher) dispatchAction(from int, action *rotonde.Action) {
 		}
 
 		if _, err := connection.actions.GetDefinitionForIdentifier(action.Identifier); err == nil {
-			connection.InChan <- *action
+			connection.Write(*action)
 		}
 	}
 }
@@ -184,7 +194,7 @@ func (dispatcher *Dispatcher) dispatchDefinition(from int, definition *rotonde.D
 		if i == from {
 			continue
 		}
-		connection.InChan <- *definition
+		connection.Write(*definition)
 	}
 }
 
@@ -204,7 +214,7 @@ func (dispatcher *Dispatcher) dispatchUnDefinition(from int, unDefinition *roton
 		if i == from {
 			continue
 		}
-		connection.InChan <- *unDefinition
+		connection.Write(*unDefinition)
 	}
 }
 
