@@ -12,7 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-const ROTONDE_VENDOR_ID = 0x03EB
+const ROTONDE_VENDOR_ID = 0x0420
 const MaxHIDFrameSize = 64
 const HeaderLength = 4
 
@@ -95,7 +95,8 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 	go func() {
 		defer wg.Done()
 
-		fixedLengthWriteBuffer := make([]byte, MaxHIDFrameSize)
+		fixedLengthWriteBuffer := make([]byte, MaxHIDFrameSize + 1)
+		fixedLengthWriteBuffer[0] = 0x0
 		for {
 			select {
 			case dispatcherPacket := <-c.InChan:
@@ -109,19 +110,28 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 					continue
 				}
 
+				first := true
 				currentOffset := 0
-				for currentOffset < len(jsonPacket) {
-					toWriteLength := len(jsonPacket) - currentOffset
+				length := len(jsonPacket)
+				for currentOffset < length {
+					headerLength := 0
+					if first {
+						headerLength = HeaderLength
+					}
+					toWriteLength := length - currentOffset
 					// packet on the HID link can't be > MaxHIDFrameSize, split it if it's the case.
-					if toWriteLength > MaxHIDFrameSize-HeaderLength {
-						toWriteLength = MaxHIDFrameSize - HeaderLength
+					if toWriteLength > MaxHIDFrameSize-headerLength {
+						toWriteLength = MaxHIDFrameSize - headerLength
 					}
 
-					fixedLengthWriteBuffer[0] = 0x3c
-					fixedLengthWriteBuffer[1] = 0x42
-					fixedLengthWriteBuffer[2] = byte(toWriteLength)
-					fixedLengthWriteBuffer[3] = byte(toWriteLength >> 8)
-					copy(fixedLengthWriteBuffer[HeaderLength:], jsonPacket[currentOffset:currentOffset+toWriteLength])
+					if first {
+						fixedLengthWriteBuffer[1] = 0x3c
+						fixedLengthWriteBuffer[2] = 0x40
+						fixedLengthWriteBuffer[3] = byte(length)
+						fixedLengthWriteBuffer[4] = byte(length >> 8)
+						first = false
+					}
+					copy(fixedLengthWriteBuffer[headerLength + 1:], jsonPacket[currentOffset:currentOffset+toWriteLength])
 
 					n, err := cc.Write(fixedLengthWriteBuffer)
 					if err != nil {
@@ -129,8 +139,8 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 						errChan <- err
 						return
 					}
-					if n > HeaderLength {
-						currentOffset += n - HeaderLength
+					if n > headerLength {
+						currentOffset += n - headerLength - 1
 					}
 				}
 
@@ -194,7 +204,7 @@ func frameReader(wg *sync.WaitGroup, cc *hid.Device, c *Connection, errChan chan
 			return
 		}
 
-		if err := readNBytes(2); err != nil {
+		if err := readNBytes(HeaderLength); err != nil {
 			errChan <- err
 			return
 		}
