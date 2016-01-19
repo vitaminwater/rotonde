@@ -95,7 +95,7 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 	go func() {
 		defer wg.Done()
 
-		fixedLengthWriteBuffer := make([]byte, MaxHIDFrameSize + 1)
+		fixedLengthWriteBuffer := make([]byte, MaxHIDFrameSize+1)
 		fixedLengthWriteBuffer[0] = 0x0
 		for {
 			select {
@@ -109,8 +109,6 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 					log.Warning(err)
 					continue
 				}
-
-				log.Info("HID packet from Dispatcher ", len(c.InChan))
 
 				first := true
 				currentOffset := 0
@@ -133,15 +131,13 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 						fixedLengthWriteBuffer[4] = byte(length >> 8)
 						first = false
 					}
-					copy(fixedLengthWriteBuffer[headerLength + 1:], jsonPacket[currentOffset:currentOffset+toWriteLength])
+					copy(fixedLengthWriteBuffer[headerLength+1:], jsonPacket[currentOffset:currentOffset+toWriteLength])
 
-					log.Info("cc.Write")
 					n, err := cc.Write(fixedLengthWriteBuffer)
 					if err != nil {
 						log.Warning(err)
 						break
 					}
-					log.Info("cc.Write after")
 					if n > headerLength {
 						currentOffset += n - headerLength - 1
 					}
