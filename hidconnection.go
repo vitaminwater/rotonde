@@ -110,6 +110,8 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 					continue
 				}
 
+				log.Info("HID packet from Dispatcher ", len(c.InChan))
+
 				first := true
 				currentOffset := 0
 				length := len(jsonPacket)
@@ -133,12 +135,13 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 					}
 					copy(fixedLengthWriteBuffer[headerLength + 1:], jsonPacket[currentOffset:currentOffset+toWriteLength])
 
+					log.Info("cc.Write")
 					n, err := cc.Write(fixedLengthWriteBuffer)
 					if err != nil {
 						log.Warning(err)
-						errChan <- err
-						return
+						break
 					}
+					log.Info("cc.Write after")
 					if n > headerLength {
 						currentOffset += n - headerLength - 1
 					}
