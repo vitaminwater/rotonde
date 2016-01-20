@@ -13,7 +13,6 @@ ws.on('open', () => {
       identifier: 'PONG',
     }
   }));
-  sendPing(0);
 });
 
 ws.on('message', (data) => {
@@ -21,6 +20,9 @@ ws.on('message', (data) => {
   switch (packet.type) {
     case 'def':
       console.log('received', packet.payload.type, 'definition', packet.payload);
+      if (packet.payload.identifier == 'PONG') {
+        sendPing(0);
+      }
     break;
     case 'undef':
       console.log('received', packet.payload.type, 'unDefinition', packet.payload);

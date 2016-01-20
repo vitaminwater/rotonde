@@ -12,7 +12,10 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-const ROTONDE_VENDOR_ID = 0x0420
+const ROTONDE_VENDOR_ID = 0x0042
+const FEATURE_STOP = 0x0
+const FEATURE_START = 0x1
+const FEATURE_DEFINITION = 0xff
 const MaxHIDFrameSize = 64
 const HeaderLength = 4
 
@@ -84,7 +87,7 @@ func startHIDConnection(device *hid.DeviceInfo, cc *hid.Device, d *Dispatcher) e
 	d.AddConnection(c)
 	defer c.Close()
 
-	if _, err := cc.SendFeatureReport([]byte{0x0, 0x0, 0x0, 0x0, 0x0}); err != nil {
+	if _, err := cc.SendFeatureReport([]byte{0x00, FEATURE_DEFINITION}); err != nil {
 		log.Warning(err)
 	}
 
