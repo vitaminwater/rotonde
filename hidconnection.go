@@ -59,6 +59,7 @@ func StartHID(d *Dispatcher) {
 				cc, err := hid.Open(device.VendorId, device.ProductId, device.SerialNumber)
 				if err != nil {
 					log.Warning(err)
+					log.Warningf("Failing device is: 0x%04x:0x%04x serial: %s", device.VendorId, device.ProductId, device.SerialNumber)
 					time.Sleep(1 * time.Second)
 					continue
 				}
