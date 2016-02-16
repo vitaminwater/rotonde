@@ -25,7 +25,7 @@ func StartHID(d *Dispatcher) {
 		var openPorts = map[string]bool{}
 
 		var deviceId = func(device *hid.DeviceInfo) string {
-			return fmt.Sprintf("%x:%x", device.VendorId, device.ProductId)
+			return fmt.Sprintf("%x:%x:%s", device.VendorId, device.ProductId, device.SerialNumber)
 		}
 
 		return func(device *hid.DeviceInfo) bool {
@@ -56,13 +56,13 @@ func StartHID(d *Dispatcher) {
 				if isOpen(device) {
 					continue
 				}
-				cc, err := hid.Open(device.VendorId, device.ProductId, "")
+				cc, err := hid.Open(device.VendorId, device.ProductId, device.SerialNumber)
 				if err != nil {
 					log.Warning(err)
 					time.Sleep(1 * time.Second)
 					continue
 				}
-				log.Infof("HID device successfully openned 0x%04x:0x%04x", device.VendorId, device.ProductId)
+				log.Infof("HID device successfully openned 0x%04x:0x%04x serial: %s", device.VendorId, device.ProductId, device.SerialNumber)
 
 				openned(device)
 				go func() {
