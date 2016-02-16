@@ -180,7 +180,8 @@ func frameReader(wg *sync.WaitGroup, cc *hid.Device, c *Connection, errChan chan
 				return err
 			}
 			if n == 0 {
-				return fmt.Errorf("Empty message usually means disconnection")
+				continue
+				//return fmt.Errorf("Empty message usually means disconnection")
 			}
 
 			buffer.Write(packet[0:n])
