@@ -1,9 +1,7 @@
 # Rotonde
 
 - `rotonde` makes [IoT](https://en.wikipedia.org/wiki/Internet_of_Things) development accessible to every developers.
-- just pick your favorite language and start coding on your favorite platform.
-- with `rotonde` you use the best libraries available, not just the one available for your favorite language.
-- and it's as easy to use as a web `API`:)
+- just pick your favorite language , add websocket and start coding hardware on your favorite platform.
 
 [See it in action](https://gist.github.com/vitaminwater/9236f1b5dd61fb7a3408)
 
