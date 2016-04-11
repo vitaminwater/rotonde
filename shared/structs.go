@@ -105,12 +105,16 @@ func ToJSON(object interface{}) ([]byte, error) {
 		packet = Packet{Type: "event", Payload: data}
 	case Action:
 		packet = Packet{Type: "action", Payload: data}
+	case Subscription:
+		packet = Packet{Type: "sub", Payload: data}
+	case Unsubscription:
+		packet = Packet{Type: "unsub", Payload: data}
 	case Definition:
 		packet = Packet{Type: "def", Payload: data}
 	case UnDefinition:
 		packet = Packet{Type: "undef", Payload: data}
 	default:
-		log.Info("Oops unknown packet: ", packet)
+		log.Fatal("Oops unknown packet: ", object)
 	}
 
 	jsonPacket, err := json.Marshal(packet)

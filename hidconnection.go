@@ -192,7 +192,7 @@ func frameReader(wg *sync.WaitGroup, cc *hid.Device, c *Connection, errChan chan
 	readUpToFrame := func() error {
 		for {
 			if _, err := buffer.ReadBytes(0x3c); err != nil {
-				if err = readNBytes(64); err != nil {
+				if err = readNBytes(MaxHIDFrameSize); err != nil {
 					return err
 				}
 				continue
