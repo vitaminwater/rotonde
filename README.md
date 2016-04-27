@@ -5,116 +5,13 @@
 
 [See it in action](https://gist.github.com/vitaminwater/9236f1b5dd61fb7a3408)
 
-# Live example
+# Getting started in 5 min
 
-![](http://cdn.meme.am/instances/500x/65249201.jpg)
+- Go through the [setup guide](https://github.com/HackerLoop/rotonde-cli).
 
-- Go through the [setup guide](https://github.com/HackerLoop/rotonde#setup).
-- Install this [module](https://github.com/HackerLoop/serial-port-json-server).
-- Run both of them, on your raspberry PI for example, but these two can work
-  on you laptop too, not sure about Windows tho...
-- Install this [chrome extension](https://chrome.google.com/webstore/detail/simple-websocket-client/pfdhoblngboilpfeibdedpjgfnlcodoo?hl=en).
-
-*TODO: make install+run script*
-
-Now from the extension connect to rotonde on your board's IP:
-
-```
-ws://[ip address]:4224/
-```
-
-Click `open`, you are now connected to rotonde.
-
-In the extension's console you should have something like this (stripped
-most of them for clarity):
-
-```
-[...]
-{  
-   "type":"def",
-   "payload":{  
-      "identifier":"SERIAL_PORTMESSAGE",
-      "type":"event",
-      "fields":[  
-         {  
-            "name":"P",
-            "type":"",
-            "units":""
-         },
-         {  
-            "name":"D",
-            "type":"",
-            "units":""
-         }
-      ]
-   }
-}
-
-{  
-   "type":"def",
-   "payload":{  
-      "identifier":"SERIAL_OPEN",
-      "type":"action",
-      "fields":[  
-         {  
-            "name":"port",
-            "type":"string",
-            "units":""
-         },
-         {  
-            "name":"baudrate",
-            "type":"number",
-            "units":""
-         },
-         {  
-            "name":"buffer",
-            "type":"string",
-            "units":""
-         }
-      ]
-   }
-}
-[...]
-```
-
-These are the available events and actions. All those starting with
-`SERIAL_` are from our serial module.
-
-We are going to use it and open a serial port on the system by
-sending a `SERIAL_OPEN` action.
-
-Clear the websocket output and copy-paste this JSON object into to the websocket extension:
-```
-{
-  "type":"action",
-  "payload":{
-    "identifier":"SERIAL_OPEN",
-    "data":{
-      "port":"/dev/ttyAMA0", // internal serial port on raspberry PI
-      "baudrate":9600
-    }
-  }
-}
-```
-hit ctrl+enter to send it to rotonde.
-
-If your serial port is opened you can now listen to it by subsribing to
-the `SERIAL_PORTMESSAGE` by sending this packet:
-
-```
-{
-  "type":"sub",
-  "payload":{
-    "identifier":"SERIAL_PORTMESSAGE"
-  }
-}
-```
-
-And that's it, you just opened a serial port on you raspberry PI, that's
-as easy as that with rotonde.
 
 # Rotonde mindset
-
+![](http://cdn.meme.am/instances/500x/65249201.jpg)
 When you code with `rotonde` you have to think in term of modules.
 Each module is connected to `rotonde`, and communicate with each other
 though `rotonde`.
