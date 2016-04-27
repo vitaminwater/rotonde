@@ -5,13 +5,15 @@
 
 [See it in action](https://gist.github.com/vitaminwater/9236f1b5dd61fb7a3408)
 
-# Getting started in 5 min
+# Getting started
 
 - Go through the [setup guide](https://github.com/HackerLoop/rotonde-cli).
 
 
 # Rotonde mindset
+
 ![](http://cdn.meme.am/instances/500x/65249201.jpg)
+
 When you code with `rotonde` you have to think in term of modules.
 Each module is connected to `rotonde`, and communicate with each other
 though `rotonde`.
