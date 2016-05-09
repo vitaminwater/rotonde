@@ -272,7 +272,11 @@ This is a list (in progress) of the available abstractions:
 
 # Contributing
 
-Yes please.
+Contributions to rotonde are of course welcome, and it is actually really easy,
+just pick the best library you know, whatever the language its made with, and expose
+its features throuhg a rotonde API.
+
+See some examples at [https://github.com/HackerLoop](https://github.com/HackerLoop)
 
 ![](https://d2v4zi8pl64nxt.cloudfront.net/1362775331_b8c6b6e89781c85fee638dffe341ff64.jpg)
 
