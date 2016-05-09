@@ -268,6 +268,7 @@ websocket, makes it much more efficient.
 This is a list (in progress) of the available abstractions:
 
 - [rotonde-client.js](https://github.com/HackerLoop/rotonde-client.js)
+- [rotonde-client-go](https://github.com/HackerLoop/rotonde-client-go)
 
 # Libraries to port to rotonde
 
