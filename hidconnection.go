@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GeertJohan/go.hid"
+	"github.com/marshallbrekka/go.hid"
 	"github.com/HackerLoop/rotonde/shared"
 	log "github.com/Sirupsen/logrus"
 )
